@@ -421,11 +421,22 @@ def index():
     return app_file("index.html", "text/html")
 
 
+@app.get("/logo.png")
+def logo():
+    return app_file("logo.png", "image/png")
+
+
+@app.get("/sw.js")
+def service_worker():
+    """The script that lets the app answer from the phone when this computer is asleep (see app/sw.js)."""
+    return app_file("sw.js", "text/javascript")
+
+
 @app.get("/manifest.webmanifest")
 def manifest():
     return JSONResponse({
         "name": "Atelier d'épisode", "short_name": "Atelier", "start_url": "/", "display": "standalone",
-        "background_color": "#e9f6ff", "theme_color": "#ff7a1a",
+        "background_color": "#f5f6f8", "theme_color": "#f5f6f8",
         "icons": [{"src": "/icon-192.png", "sizes": "192x192", "type": "image/png"},
                   {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png"}],
     }, media_type="application/manifest+json")

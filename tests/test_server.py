@@ -66,3 +66,13 @@ def test_adding_an_episode_runs_the_import(root, monkeypatch, tmp_path):
     ep = client.get("/api/episodes/mon-episode-n-2").json()
     assert ep["title"] == "Mon Épisode n° 2" and ep["level"] == "B1" and ep["sentences"][0]["text"] == "Une phrase."
     assert (root / "episodes" / "mon-episode-n-2" / "audio.mp3").is_file()
+
+
+def test_offline_helper_is_served_and_change_times_are_kept(root, monkeypatch):
+    client = TestClient(load_server(root, monkeypatch).app)
+    helper = client.get("/sw.js")                                 # the script that answers from the phone when the computer sleeps
+    assert helper.status_code == 200 and "javascript" in helper.headers["content-type"]
+    assert helper.headers["cache-control"] == "no-cache" and "X-Atelier-Offline" in helper.text
+    # the app sends, beside each change, the time it was made: the server keeps it like any other value
+    assert client.put("/api/store/atelier:stamps", json={"atelier:ep:essai": 1794686827810}).json() == {"ok": True}
+    assert client.get("/api/store").json()["atelier:stamps"] == {"atelier:ep:essai": 1794686827810}

@@ -2,15 +2,16 @@
 
 Learn French from one podcast episode at a time. Give it an audio file (and a transcript if you have one);
 it returns the episode cut into sentences with exact times, a word list at your level, pictures, and
-exercises: listening, vocabulary, dictation, recitation and spaced review.
+exercises: listening, vocabulary, dictation, recitation and spaced review, plus a dictionary of everything said
+in your episodes and a calendar of practice days.
 
 Everything runs on your own computer and is used from a phone on the same Wi-Fi.
 
 中文说明：[README.zh.md](README.zh.md)
 
-| Listen sentence by sentence | Words of the episode | Fill the gap | Review cards |
+| Home | Listen sentence by sentence | Fill the gap | Review cards |
 | --- | --- | --- | --- |
-| ![Episode](docs/screen-episode.png) | ![Words](docs/screen-words.png) | ![Game](docs/screen-game.png) | ![Cards](docs/screen-cards.png) |
+| ![Home](docs/screen-home.png) | ![Episode](docs/screen-episode.png) | ![Game](docs/screen-game.png) | ![Cards](docs/screen-cards.png) |
 
 The screenshots show the sample episode in `sample/`, written for this repository.
 
@@ -44,7 +45,7 @@ audio (+ transcript) → import_episode.py → episode.json ─┐
 | Read dictionary forms | [edge-tts](https://github.com/rany2/edge-tts) | One preset voice, only for words the episode says in another form |
 | Store | PostgreSQL 16 in Docker | Episodes, sentences, a dictionary shared by all episodes, and the learner's progress |
 | Serve | FastAPI | Sends the app, the audio and the pictures; saves progress |
-| App | One HTML file, plain JavaScript | Works on a phone, can be added to the home screen |
+| App | One HTML file, plain JavaScript, a service worker | Works on a phone, can be added to the home screen, works offline once an episode is downloaded |
 
 ## Try it
 
@@ -78,6 +79,23 @@ python db.py sync
 
 Choosing the words needs access to Claude: copy `.env.example` to `.env` and put your Anthropic API key in it.
 The pictures need `pip install -r requirements-images.txt` (large).
+
+## Without the computer: offline on the phone
+
+By default the phone asks the computer for everything, so the app stops when the computer sleeps.
+An episode can instead be copied to the phone:
+
+1. Open the app on the phone through an **https** address (browsers refuse to keep copies on plain http).
+   [Tailscale](https://tailscale.com) gives one for free: install it on the computer and the phone with the
+   same account, then run `tailscale serve --bg 8000` on the computer and open the address it prints.
+2. Tap the download button at the top, then "Télécharger sur cet appareil". Audio, pictures, words and the app
+   itself are stored on the phone.
+3. Study anywhere. Progress is written on the phone first and sent to the computer at the next contact;
+   the dot on the button shows when changes are waiting.
+
+How it works: `app/sw.js` is a service worker. It answers from the copies on the phone when the computer is
+silent, including the pieces of audio the player asks for. Each change carries its time; if the same episode
+was changed on both sides while apart, the later change wins.
 
 ## Database (optional)
 

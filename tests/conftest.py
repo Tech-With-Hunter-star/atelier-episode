@@ -1,3 +1,4 @@
+import shutil
 import json
 import os
 import sys
@@ -49,6 +50,7 @@ def root(tmp_path):
          "example_audio": {"source": "voice", "file": "1-g.wav", "text": "Ce défi est difficile."}}], ensure_ascii=False), encoding="utf-8")
     (tmp_path / "app").mkdir()
     (tmp_path / "app" / "index.html").write_text("<html>app</html>", encoding="utf-8")
+    shutil.copy(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "app", "sw.js"), tmp_path / "app" / "sw.js")
     return tmp_path
 
 

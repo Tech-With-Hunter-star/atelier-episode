@@ -190,6 +190,19 @@ ATELIER_TEST_DB=postgresql://atelier:atelier@localhost:5433/atelier_test pytest 
 数据库测试会**清空** `ATELIER_TEST_DB` 指向的那个库，所以要用一个单独的库
 （`docker compose exec db createdb -U atelier atelier_test`），不要指向你真正的库。
 
+## 离线：电脑合上盖子也能在手机上学
+
+默认情况下手机每次都向电脑要内容，电脑一睡眠 app 就用不了。可以把一集复制到手机里：
+
+1. 手机要用 **https** 地址打开 app（浏览器不允许 http 的网页保存离线副本）。
+   用 Tailscale（免费）：电脑和手机各装一个，登录同一个账号，在电脑上运行 `tailscale serve --bg 8000`，
+   然后在手机上打开它打印出来的地址，重新"添加到主屏幕"。
+2. 点顶部的下载按钮 → "Télécharger sur cet appareil"。音频、图片、单词和 app 本身都会存进手机。
+3. 之后电脑合着也能学。进度先记在手机上，下次连上电脑时自动传回去；按钮上有小圆点表示还有进度没传。
+
+规则：同一集如果两边都改了，以后改的那一方为准。离线时不能新增一集。
+实现在 `app/sw.js`（service worker）：电脑不回应时，由它用手机里的副本回答。
+
 ## 出门在外用手机
 
 服务器没有登录，所以不要把端口直接开到公网。安全的做法是 Tailscale：电脑和手机都装上并登录同一个账号，

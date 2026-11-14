@@ -3,20 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#ff7a1a">
+<meta name="theme-color" content="#f5f6f8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Atelier">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Atelier d'épisode</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* direction: a level-by-level adventure game for an eight-year-old. A treasure map is the home screen: six levels on a winding
-     trail, stars for each, a hot-air balloon on the level in play. Chunky rounded controls with a solid bottom edge, sky and grass colours.
-     layout: full-height app shell: episode bar and star counter on top, one section in the middle, tab bar at the bottom */
+  /* The first look was a children's adventure game; the "calm layer" at the end of this sheet replaces it with a quiet study tool
+     (light grey page, white cards, one yellow accent) and decides the final colours and shapes.
+     layout: full-height app shell: episode bar on top, one section in the middle, tab bar at the bottom */
   --paper:#e9f6ff; --card:#ffffff; --ink:#1f2d4d; --muted:#5b6a8c; --line:#c5d9ee;
   --accent:#ff7a1a; --accent-ink:#ffffff; --edge:#c9540a; --mark:#ffe45c; --mark-ink:#3a2f00;
   --good:#1fa863; --bad:#e23d33; --gold:#ffc93c; --gold-edge:#d99a00; --blue:#2d7ff9;
@@ -208,10 +206,11 @@ button.pri:active:not(:disabled){box-shadow:0 0 0 var(--edge);transform:translat
 .bar{height:12px;border-radius:6px;border:2px solid var(--line);background:var(--card)}.bar i{background:var(--good);border-radius:4px}
 /* the map */
 #view-carte.cur{flex:1 0 auto;padding:0;margin:0 -16px}
-.map{position:relative;flex:1 0 auto;min-height:760px;padding:18px 16px 110px;overflow:hidden;
+.map{position:relative;flex:1 0 auto;min-height:0;padding:0;overflow:hidden;
   background:radial-gradient(120px 60px at 18% 100%,var(--hill) 98%,transparent),radial-gradient(170px 80px at 78% 100%,var(--hill) 98%,transparent),linear-gradient(to top,var(--grass) 0 46px,transparent 46px),linear-gradient(var(--sky1),var(--sky2) 70%)}
-.map h2{position:relative;z-index:2}
-.map .hint{position:relative;z-index:2;color:var(--ink);opacity:.8}
+.map h2{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}   /* for screen readers only: the whole map must fit on one screen */
+.map.tight .lab span:not(.s3){display:none}
+.map.tight .lab{padding:2px 9px}
 .cloud{position:absolute;height:26px;border-radius:20px;background:var(--card);opacity:.85}
 .cloud::before{content:"";position:absolute;left:18%;bottom:8px;width:44%;height:30px;border-radius:50%;background:inherit}
 #trail{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
@@ -250,6 +249,12 @@ button.pri:active:not(:disabled){box-shadow:0 0 0 var(--edge);transform:translat
 /* ---- richer prototype: progress, settings, review, recite ladder, worlds ---- */
 .appbar .ico{flex:0 0 auto;width:42px;height:42px;min-height:42px;padding:0;display:grid;place-items:center;border-radius:14px}
 .appbar .ico[aria-current="page"]{border-color:var(--accent);color:var(--accent)}
+#go-net{position:relative}
+#go-net i{position:absolute;right:5px;top:5px;width:10px;height:10px;border-radius:50%;border:2px solid var(--card);display:none}
+#go-net.saved{color:var(--good);border-color:var(--good)}
+#go-net.wait i{display:block;background:var(--accent)}          /* changes not yet sent to the computer */
+#go-net.off i{display:block;background:var(--muted)}             /* working offline */
+.netline{display:flex;gap:8px;align-items:baseline;margin:4px 0}.netline b{flex:0 0 auto}
 .strip{cursor:pointer;width:100%;border-left:0;border-right:0;border-top:0;border-radius:0;box-shadow:none;background:transparent;min-height:0}
 .strip:active:not(:disabled){transform:none;box-shadow:none}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -302,6 +307,144 @@ button.pri:active:not(:disabled){box-shadow:0 0 0 var(--edge);transform:translat
 }
 .jobbar{height:12px;border-radius:6px;border:2px solid var(--line);background:var(--card);overflow:hidden}
 .jobbar i{display:block;height:100%;background:var(--accent);transition:width .6s}
+/* ---- calm layer: a quiet study tool. Light grey page, white rounded cards, near-black text, one yellow accent.
+   It comes last and overrides the game look above: no thick borders, no solid bottom edges, no cartoon typeface. ---- */
+:root{
+  --paper:#f5f6f8; --card:#ffffff; --ink:#17181c; --muted:#70757f; --line:#e7e9ee;
+  --accent:#ffd84d; --accent-ink:#17181c; --edge:#eec22a; --mark:#fff3bf; --mark-ink:#17181c;
+  --good:#17a567; --bad:#e5484d; --gold:#f4b400; --gold-edge:#f4b400; --blue:#3b6ef5; --lock:#d5d8de; --lock-edge:#d5d8de;
+  --t1:#fdeee8; --t2:#eaf0ff; --t3:#fff6d6; --t4:#e6f6ec; --t5:#f1ecff; --tile-ink:#3a3d45;
+  --display:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#101114; --card:#1b1c20; --ink:#f3f4f6; --muted:#9aa0a8; --line:#2b2d33;
+    --accent:#ffd84d; --accent-ink:#17181c; --edge:#c9a21f; --mark:#4a4116; --mark-ink:#fff6cc;
+    --good:#4fd08f; --bad:#ff7b7f; --gold:#ffd84d; --gold-edge:#ffd84d; --blue:#86a8ff; --lock:#3a3c43; --lock-edge:#3a3c43;
+    --t1:#3a2b27; --t2:#262d42; --t3:#3b351c; --t4:#21352a; --t5:#2f2941; --tile-ink:#e6e7ea; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#101114; --card:#1b1c20; --ink:#f3f4f6; --muted:#9aa0a8; --line:#2b2d33;
+  --accent:#ffd84d; --accent-ink:#17181c; --edge:#c9a21f; --mark:#4a4116; --mark-ink:#fff6cc;
+  --good:#4fd08f; --bad:#ff7b7f; --gold:#ffd84d; --gold-edge:#ffd84d; --blue:#86a8ff; --lock:#3a3c43; --lock-edge:#3a3c43;
+  --t1:#3a2b27; --t2:#262d42; --t3:#3b351c; --t4:#21352a; --t5:#2f2941; --tile-ink:#e6e7ea; color-scheme:dark;
+}
+body{font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h2{font-size:1.2rem;font-weight:700;letter-spacing:-.01em}
+h3{font-size:1rem;font-weight:700}
+.appbar{border-bottom:0;padding:10px 16px 6px}
+#ep{font-weight:600;border:0;background:var(--card);border-radius:12px}
+.strip{display:none}
+button,select{border:1px solid var(--line);border-radius:12px;font-weight:600;box-shadow:none;transition:background .12s,transform .08s}
+button:active:not(:disabled){transform:scale(.98);box-shadow:none}
+button.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);box-shadow:0 2px 0 var(--edge);font-weight:700}
+button.pri:active:not(:disabled){transform:translateY(2px);box-shadow:0 0 0 var(--edge)}
+button[aria-pressed="true"]{border-color:var(--ink);color:var(--ink);background:var(--mark);font-weight:700}
+#p-play{box-shadow:none;border:0}
+a:focus-visible,button:focus-visible,textarea:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.card{border:0;border-radius:20px;padding:16px}
+.card.sel{border:2px solid var(--ink)}
+textarea,input[type=text]{border-radius:12px;background:var(--card)}
+.card textarea,.card input[type=text]{background:var(--paper)}
+input[type=range]{accent-color:var(--ink)}
+.pill{border:0;background:var(--paper)}
+.tabbar{border-top:1px solid var(--line);background:var(--card)}
+.tabbar a{font-weight:500;font-size:.7rem;margin:4px 2px;padding:6px 1px;color:var(--muted)}
+.tabbar a.cur{background:transparent;color:var(--ink);font-weight:700}
+.appbar .ico{border:0;background:var(--card);border-radius:12px}
+.appbar .ico[aria-current="page"]{background:var(--mark);color:var(--ink)}
+#go-net.saved{color:var(--good)}
+.sent .tm{font-weight:600;color:var(--muted)}
+.sent.now .tm{color:var(--ink)}
+#view-episode #subs{border-top:0;border-radius:20px 20px 0 0}
+#view-episode .sent{border-radius:12px}
+#view-episode .sent.ok::after{color:var(--gold)}
+.blank{border-bottom-color:var(--ink);color:var(--ink)}
+.tag.gen{color:var(--muted)}
+.tools{border:0;border-radius:14px}
+.nowbar .logo{color:var(--accent-ink)}
+.mini{border:0;border-radius:16px;box-shadow:none}
+.mini .word,.word{font-weight:700;font-size:1.15rem;line-height:1.2}
+.thumb{border-radius:12px}
+.thumb b{font-weight:700;opacity:.55}
+.bigword{font-weight:700;letter-spacing:-.02em}
+.grp{border-top:0;margin:0 0 -6px;font-weight:700}
+.grp span{border:0;background:var(--card)}
+.seg{background:var(--card);border-radius:14px;padding:4px;gap:4px}
+.seg button{border:0;background:transparent;color:var(--muted);border-radius:10px;min-height:38px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.stat3 div{border:0;border-radius:16px}
+.stat3 b{font-weight:700}
+.two button{border-radius:16px;min-height:64px;font-weight:700}
+.hintzone{border:1px dashed var(--lock);border-radius:16px}
+.stars{font-size:1.6rem;letter-spacing:2px}
+.stars i{-webkit-text-stroke:0}
+.bravo{font-weight:700;font-size:1.25rem}
+.bar{height:8px;border-radius:4px;border:0;background:var(--line)}.bar i{background:var(--accent);border-radius:4px}
+.jobbar{height:8px;border:0;background:var(--line)}
+.opts button{border-radius:14px}
+.tile{border:0;border-radius:16px;box-shadow:none}
+.tile b{font-weight:700;font-size:1.5rem}
+.days i{border:0;background:var(--line)}
+.days i.on{background:var(--accent)}
+.days i.today{outline:2px solid var(--ink)}
+.lv .s3 i,.s3 i{color:var(--gold)}
+.boxes i{background:var(--ink);border-radius:6px 6px 2px 2px;opacity:.85}
+.world .globe{display:none}
+.steps span{border:0;font-weight:600;background:var(--card);border-radius:10px}
+.steps span.on{background:var(--ink);color:var(--card)}
+.steps span.ok{background:var(--accent);color:var(--accent-ink)}
+.winbox{border:0;border-radius:20px}
+.pop{background:rgba(16,17,20,.45)}
+@media (prefers-reduced-motion:no-preference){.mini{animation:none}.stars i{animation:none}}
+/* the home page: the episode, what there is to do today, and the six steps */
+#view-carte.cur{flex:0 0 auto;padding:8px 0 20px;margin:0;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;padding:2px 2px 0}
+.brand img{height:52px;width:auto;display:block}
+.brand b{font-size:1.25rem;font-weight:800;letter-spacing:-.02em}
+.brand small{display:block;color:var(--muted);font-size:.78rem;font-weight:500}
+.home-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.home-top b{font-size:1.02rem;line-height:1.3}
+.home-top span{flex:0 0 auto;color:var(--muted);font-size:.85rem;font-variant-numeric:tabular-nums}
+.today{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;text-align:center;margin-top:4px}
+#view-carte .card{gap:10px}
+.today .num{font-size:2rem;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.today .num small{font-size:1rem;font-weight:500;color:var(--muted)}
+.today .lbl{color:var(--muted);font-size:.8rem}
+.today .cell+.cell{border-left:1px solid var(--line)}
+.today button{min-height:48px;font-size:1rem}
+.path{display:flex;flex-direction:column}
+.path button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:transparent;border-radius:12px;padding:5px 4px;min-height:42px;font-weight:500}
+.path button+button{border-top:1px solid var(--line);border-radius:0}
+.path .no{flex:0 0 auto;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:.9rem;background:var(--paper);color:var(--muted)}
+.path .done .no{background:var(--accent);color:var(--accent-ink)}
+.path .play .no{background:var(--ink);color:var(--card)}
+.path .lock{opacity:.5}
+.path .txt{flex:1 1 0;min-width:0;line-height:1.25}
+.path .txt b{display:block;font-weight:600}
+.path .txt small{color:var(--muted);font-size:.78rem}
+.path .s3{flex:0 0 auto;letter-spacing:1px;color:var(--lock);font-size:.95rem}
+/* the dictionary: every word and every sentence of the episodes, searched as you type */
+.search{display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--ink);border-radius:999px;padding:0 16px;min-height:52px}
+.search input{border:0;background:transparent;padding:10px 0;font-size:1.05rem;outline:none}
+.search:focus-within{box-shadow:0 0 0 3px var(--mark)}
+.dw{display:flex;flex-direction:column;gap:6px}
+.dw+.dw{border-top:1px solid var(--line);padding-top:12px}
+.dw .head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.dw .head b{font-size:1.15rem}
+.hit{display:block;width:100%;text-align:left;border:0;background:transparent;border-radius:12px;padding:8px 6px;min-height:0;font-weight:400;line-height:1.45}
+.hit+.hit{border-top:1px solid var(--line);border-radius:0}
+.hit small{display:block;color:var(--muted);font-size:.74rem;font-variant-numeric:tabular-nums}
+.hit mark{background:var(--mark);color:var(--mark-ink);border-radius:4px;padding:0 2px;font-weight:600}
+/* the calendar of practice days */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px 2px;text-align:center}
+.cal span{font-size:.72rem;color:var(--muted);padding-bottom:2px}
+.cal i{font-style:normal;display:flex;align-items:center;justify-content:center;width:38px;height:38px;margin:0 auto;border-radius:12px;font-weight:600;font-size:.92rem;font-variant-numeric:tabular-nums}
+.cal i.out{color:var(--lock)}
+.cal i.on{background:var(--accent);color:var(--accent-ink)}
+.cal i.today{box-shadow:inset 0 0 0 2px var(--ink)}
 [hidden]{display:none !important}
 </style>
 </head>
@@ -310,21 +453,15 @@ button.pri:active:not(:disabled){box-shadow:0 0 0 var(--edge);transform:translat
 <header class="appbar">
   <h1 id="title">Épisode</h1>
   <select id="ep" aria-label="Épisode ouvert"></select>
+  <button class="ico" id="go-net" aria-label="Hors ligne et synchronisation" hidden><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg><i></i></button>
   <button class="ico" id="go-progres" aria-label="Mes progrès"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></button>
   <button class="ico" id="go-reglages" aria-label="Réglages"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></button>
 </header>
 <button class="strip" id="strip" aria-label="Voir mes progrès"></button>
 <main id="main">
 <section id="view-carte">
-  <div class="map" id="map">
-    <h2>La carte de l'aventure</h2>
-    <p class="hint">Six niveaux pour venir à bout de cet épisode. Gagne jusqu'à trois étoiles par niveau.</p>
-    <div class="cloud" style="left:8%;top:120px;width:86px"></div>
-    <div class="cloud" style="left:62%;top:230px;width:64px"></div>
-    <div class="cloud" style="left:30%;top:470px;width:74px"></div>
-    <svg id="trail" aria-hidden="true"></svg>
-    <div id="nodes"></div>
-  </div>
+  <h2 style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap">Accueil</h2>
+  <div id="home" style="display:flex;flex-direction:column;gap:12px"></div>
 </section>
 <section id="view-episode">
   <div class="prow">
@@ -341,8 +478,7 @@ button.pri:active:not(:disabled){box-shadow:0 0 0 var(--edge);transform:translat
 </section>
 
 <section id="view-vocabulaire">
-  <h2>Les mots de l'épisode</h2>
-  <p class="hint">Trois niveaux : découvre les mots, joue, puis retourne les cartes. Pour ajouter un mot : dans Épisode, touche une phrase, puis le mot.</p>
+  <h2 style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap">Les mots de l'épisode</h2><!-- kept for screen readers; the tab already says where you are -->
   <div id="v-list" style="display:flex;flex-direction:column;gap:14px"></div>
 </section>
 
@@ -401,13 +537,21 @@ button.pri:active:not(:disabled){box-shadow:0 0 0 var(--edge);transform:translat
 <section id="view-progres">
   <h2>Mes progrès</h2>
   <div class="tiles" id="pg-tiles"></div>
-  <div class="card"><h3>Les 14 derniers jours</h3><div class="days" id="pg-days"></div><p class="hint" id="pg-days-t"></p></div>
+  <div class="card"><div class="row sp"><h3 id="cal-title">Calendrier</h3><div class="row"><button class="sm" id="cal-prev" aria-label="Mois précédent">‹</button><button class="sm" id="cal-next" aria-label="Mois suivant">›</button></div></div>
+    <div class="cal" id="pg-cal"></div><p class="hint" id="pg-days-t"></p></div>
   <div class="card"><h3>Les six niveaux de cet épisode</h3><div id="pg-levels" style="display:flex;flex-direction:column;gap:12px"></div></div>
   <div class="card"><h3>Mes boîtes de révision</h3><p class="hint">Chaque carte réussie monte d'une boîte et revient plus tard. Une carte ratée retourne dans la boîte 1.</p><div class="boxes" id="pg-boxes"></div></div>
   <div class="card"><h3>Mes mondes</h3><div id="pg-worlds" style="display:flex;flex-direction:column;gap:8px"></div></div>
 </section>
+<section id="view-dico">
+  <h2 style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap">Dictionnaire</h2>
+  <div class="search"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></svg>
+    <input type="text" id="dico-q" placeholder="Cherche un mot de tes épisodes" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Mot à chercher"></div>
+  <div id="dico-out" style="display:flex;flex-direction:column;gap:12px"></div>
+</section>
 <section id="view-reglages">
   <h2>Réglages</h2>
+  <div class="card"><h3>Nouvel épisode</h3><p class="hint">Envoie un fichier audio à ton ordinateur : il découpe les phrases et choisit les mots.</p><div class="row"><button id="set-add">Ajouter un épisode</button></div></div>
   <div class="card">
     <div class="field"><label for="set-rate">Vitesse de départ</label><select id="set-rate"><option value="0.5">0,5×</option><option value="0.75">0,75×</option><option value="0.9">0,9×</option><option value="1">1×</option><option value="1.25">1,25×</option><option value="1.5">1,5×</option><option value="2">2×</option></select></div>
     <div class="field"><label for="set-seuil">Note pour valider une phrase en dictée</label><select id="set-seuil"><option value="14">14 / 20</option><option value="16">16 / 20</option><option value="18">18 / 20</option></select></div>
@@ -426,12 +570,12 @@ button.pri:active:not(:disabled){box-shadow:0 0 0 var(--edge);transform:translat
   <button class="pri" id="mini-play" aria-label="Pause">❚❚</button>
 </div>
 <nav class="tabbar" aria-label="Sections">
-  <a href="#carte"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg><span>Carte</span></a>
+  <a href="#carte"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9h12v-9"/></svg><span>Accueil</span></a>
   <a href="#episode"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg><span>Épisode</span></a>
-  <a href="#vocabulaire"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="14" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v12"/></svg><span>Vocabulaire</span></a>
+  <a href="#vocabulaire"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="14" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v12"/></svg><span>Mots</span></a>
   <a href="#dictee"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg><span>Dictée</span></a>
   <a href="#reciter"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg><span>Réciter</span></a>
-  <a href="#ajouter"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><span>Ajouter</span></a>
+  <a href="#dico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></svg><span>Dico</span></a>
 </nav>
 <div class="toast" id="toast" hidden></div>
 <audio id="au" preload="auto"></audio>
@@ -461,14 +605,122 @@ const LIB=[
    {word:"à voix haute",form:"à voix haute",def:"En parlant, pas dans sa tête.",sid:6}]}
 ];
 /* where things are remembered: this browser when the page is opened on its own, the Mac's server when it is served from there */
-let SERVER=false;
-const store={mem:null,timers:{},
-  get(k){ if(this.mem)return this.mem[k]===undefined||this.mem[k]===null?null:JSON.stringify(this.mem[k]); return localStorage.getItem(k); },
-  set(k,v){ if(!this.mem){localStorage.setItem(k,v);return;} this.mem[k]=JSON.parse(v); clearTimeout(this.timers[k]); this.timers[k]=setTimeout(()=>this.push(k),500); },
-  remove(k){ if(!this.mem){localStorage.removeItem(k);return;} this.set(k,'null'); },
-  push(k){ delete this.timers[k]; fetch('api/store/'+encodeURIComponent(k),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(this.mem[k]),keepalive:true}).catch(()=>{}); },
-  flush(){ Object.keys(this.timers).forEach(k=>{clearTimeout(this.timers[k]);this.push(k);}); }
+let SERVER=false, HAS_LOGO=false;
+/* Progress is first written on this device (the "outbox"), then sent to the computer. When the computer is
+   asleep or out of reach, the outbox simply waits: nothing is lost, and it is sent at the next contact.
+   Each change carries its time; if the same thing was also changed on the computer side, the later change wins. */
+const OUT='atelier:outbox', STAMPS='atelier:stamps', MIRROR='atelier:mirror';
+const outbox={
+  read(){try{return JSON.parse(localStorage.getItem(OUT)||'{}')||{};}catch(e){return {};}},
+  write(o){try{localStorage.setItem(OUT,JSON.stringify(o));}catch(e){}},
+  count(){return Object.keys(this.read()).length;}
 };
+let OFFLINE=false, syncing=false, syncT=0;
+const putKey=(k,v,keep)=>fetch('api/store/'+encodeURIComponent(k),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(v),keepalive:!!keep});
+const store={mem:null,
+  get(k){ if(this.mem)return this.mem[k]===undefined||this.mem[k]===null?null:JSON.stringify(this.mem[k]); return localStorage.getItem(k); },
+  set(k,v){
+    if(!this.mem){localStorage.setItem(k,v);return;}
+    this.mem[k]=JSON.parse(v);
+    const o=outbox.read(), t=Date.now(); o[k]={v:this.mem[k],t}; outbox.write(o);
+    (this.mem[STAMPS]=this.mem[STAMPS]||{})[k]=t; this.keep();
+    clearTimeout(syncT); syncT=setTimeout(sync,500); renderNet();
+  },
+  remove(k){ if(!this.mem){localStorage.removeItem(k);return;} this.set(k,'null'); },
+  keep(){try{localStorage.setItem(MIRROR,JSON.stringify(this.mem));}catch(e){}},      // this device's own up-to-date copy of all progress
+  adopt(data,offline){                         // what the computer knows (offline: what this device last knew), plus what still waits here
+    if(offline){try{const m=JSON.parse(localStorage.getItem(MIRROR)||'null'); if(m&&typeof m==='object')data=m;}catch(e){}}
+    this.mem=data; const st=data[STAMPS]=data[STAMPS]||{}, o=outbox.read(); let dropped=false;
+    Object.keys(o).forEach(k=>{ if(o[k].t>=(st[k]||0)){this.mem[k]=o[k].v;st[k]=o[k].t;} else {delete o[k];dropped=true;} });
+    if(dropped)outbox.write(o);
+    this.keep();
+  },
+  flush(){                                     // the page is closing: send what waits, without waiting for an answer
+    if(!this.mem)return; clearTimeout(syncT); const o=outbox.read(), keys=Object.keys(o); if(!keys.length)return;
+    keys.forEach(k=>putKey(k,o[k].v,true).catch(()=>{})); putKey(STAMPS,this.mem[STAMPS]||{},true).catch(()=>{});
+  }
+};
+async function sync(){                         // send the outbox to the computer; called after each change and at each new contact
+  if(!store.mem||syncing)return; syncing=true;
+  try{
+    const r=await fetch('api/store',{cache:'no-store'});
+    if(!r.ok||r.headers.get('X-Atelier-Offline'))throw 0;
+    const there=(await r.json())[STAMPS]||{}, o=outbox.read(), sent={}; let pushed=false;
+    for(const k of Object.keys(o)){
+      if(o[k].t>=(there[k]||0)){ if(!(await putKey(k,o[k].v)).ok)throw 0; there[k]=o[k].t; pushed=true; }
+      sent[k]=o[k].t;
+    }
+    if(pushed&&!(await putKey(STAMPS,there)).ok)throw 0;
+    const now=outbox.read(); Object.keys(sent).forEach(k=>{ if(now[k]&&now[k].t===sent[k])delete now[k]; }); outbox.write(now);   // a change made meanwhile stays
+    OFFLINE=false;
+  }catch(e){OFFLINE=true;}
+  syncing=false; renderNet();
+  if(outbox.count()&&!OFFLINE){clearTimeout(syncT);syncT=setTimeout(sync,500);}
+}
+addEventListener('online',()=>sync());
+setInterval(()=>{ if(store.mem&&(OFFLINE||outbox.count()))sync(); },30000);
+
+/* ---------- offline: a copy of an episode on this device ---------- */
+const CAN_SAVE='serviceWorker' in navigator&&window.isSecureContext&&'caches' in window;
+const savedList=()=>{try{return JSON.parse(localStorage.getItem('atelier:saved')||'{}')||{};}catch(e){return {};}};
+const mega=b=>b>=1048576?Math.round(b/1048576)+' Mo':Math.max(1,Math.round(b/1024))+' ko';
+let dl=null;                                    // a download in progress: {id,done,n,bytes,err}
+function filesOf(ep){                           // everything an episode needs to work without the computer
+  const u=['api/episodes/'+ep.id]; if(ep.audioUrl)u.push(ep.audioUrl);
+  ep.vocab.forEach(v=>{ if(v.image)u.push(v.image); if(v.voice_word)u.push(v.voice_word); });
+  return [...new Set(u)];
+}
+async function saveEpisode(ep){
+  if(dl)return; const urls=filesOf(ep); dl={id:ep.id,done:0,n:urls.length,bytes:0,err:0}; renderNet(); showNet();
+  try{
+    if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});      // ask the phone not to clear these copies by itself
+    await navigator.serviceWorker.ready;
+    for(let i=0;i<30&&!navigator.serviceWorker.controller;i++)await new Promise(r=>setTimeout(r,100));   // the helper must be in place: it keeps the list of episodes and the progress
+    for(const u of ['api/episodes','api/store']){const r=await fetch(u,{cache:'no-store'}); if(!r.ok||r.headers.get('X-Atelier-Offline'))throw 0;}
+    await caches.delete('atelier-ep-'+ep.id); const cache=await caches.open('atelier-ep-'+ep.id);
+    let next=0; const worker=async()=>{
+      while(next<urls.length){
+        const url=urls[next++];
+        try{
+          const r=await fetch(url,{cache:'no-store'}); if(!r.ok||r.headers.get('X-Atelier-Offline'))throw 0;
+          const copy=r.clone(); dl.bytes+=(await r.blob()).size; await cache.put(url,copy);
+        }catch(e){dl.err++;}
+        dl.done++; if($('pop').dataset.kind==='net')showNet();
+      }};
+    await Promise.all([worker(),worker(),worker(),worker()]);
+    if(dl.err)throw 0;
+    const all=savedList(); all[ep.id]={title:ep.title,n:dl.n,bytes:dl.bytes,at:Date.now()}; localStorage.setItem('atelier:saved',JSON.stringify(all));
+    dl=null; toast('Épisode enregistré sur cet appareil.');
+  }catch(e){
+    const missed=dl?dl.err:0; dl=null; caches.delete('atelier-ep-'+ep.id).catch(()=>{});
+    toast(missed?missed+' fichier'+(missed>1?'s':'')+' sur '+urls.length+' n\'ont pas pu être copiés. Réessaie près de ton ordinateur.':'La copie a échoué : la place manque peut-être sur cet appareil.');
+  }
+  renderNet(); if($('pop').dataset.kind==='net')showNet();
+}
+async function forgetEpisode(id){
+  await caches.delete('atelier-ep-'+id).catch(()=>{}); const all=savedList(); delete all[id];
+  try{localStorage.setItem('atelier:saved',JSON.stringify(all));}catch(e){}
+  renderNet(); showNet(); toast('Copie retirée de cet appareil.');
+}
+function renderNet(){                           // the button at the top: copied or not, offline or not, changes waiting or not
+  const b=$('go-net'); if(!b)return; b.hidden=!SERVER; if(!SERVER)return;
+  const here=EP&&EP.id&&savedList()[EP.id], wait=outbox.count();
+  b.className='ico'+(here?' saved':'')+(OFFLINE?' off':wait?' wait':'');
+  b.setAttribute('aria-label',(here?'Épisode enregistré sur cet appareil':'Épisode non enregistré sur cet appareil')+(OFFLINE?', hors ligne':'')+(wait?', '+wait+' changement'+(wait>1?'s':'')+' à envoyer':''));
+}
+function showNet(){
+  const here=EP&&EP.id&&savedList()[EP.id], wait=outbox.count(), busy=dl&&EP&&dl.id===EP.id;
+  let h='<div class="top"><span class="tag">Cet appareil</span><button data-a="x" aria-label="Fermer">✕</button></div>';
+  h+='<p class="big" style="font-size:1.05rem">'+esc(EP?EP.title:'')+'</p>';
+  if(!CAN_SAVE)h+='<p class="rest">Pour utiliser l\'app sans ton ordinateur, ouvre-la avec son adresse sécurisée, celle qui commence par https. Avec l\'adresse actuelle, le navigateur refuse de garder une copie.</p>';
+  else if(busy)h+='<p class="rest">Copie en cours : '+dl.done+' / '+dl.n+' fichiers · '+mega(dl.bytes)+'. Garde l\'app ouverte.</p><div class="bar" aria-hidden="true"><i style="width:'+Math.round(100*dl.done/dl.n)+'%"></i></div>';
+  else if(here)h+='<p class="rest">Enregistré sur cet appareil : '+here.n+' fichiers, '+mega(here.bytes)+'. Tu peux apprendre sans ton ordinateur.</p><div class="row"><button class="sm" data-a="net-save">Mettre à jour la copie</button><button class="sm" data-a="net-forget">Retirer de cet appareil</button></div>';
+  else h+='<p class="rest">Pas encore enregistré sur cet appareil : il faut que ton ordinateur soit allumé pour l\'ouvrir.</p><div class="row"><button class="sm pri" data-a="net-save"'+(OFFLINE?' disabled':'')+'>Télécharger sur cet appareil</button></div>';
+  h+='<p class="netline"><b>'+(OFFLINE?'Hors ligne.':'En ligne.')+'</b><span class="rest" style="margin:0">'+
+     (wait?wait+' changement'+(wait>1?'s':'')+' en attente : '+(OFFLINE?'ils partiront dès que ton ordinateur répondra.':'envoi en cours.'):'Tes progrès sont tous sur ton ordinateur.')+'</span></p>'+
+     (wait||OFFLINE?'<div class="row"><button class="sm" data-a="net-sync">Synchroniser maintenant</button></div>':'');
+  $('pop-body').innerHTML=h; $('pop').dataset.kind='net'; $('pop').hidden=false;
+}
 addEventListener('visibilitychange',()=>{if(document.hidden)store.flush();});
 addEventListener('pagehide',()=>store.flush());
 const pkey=ep=>'atelier:'+(ep.id?'ep:'+ep.id:ep.title);
@@ -502,7 +754,7 @@ function openEpisode(i){
   });
   const k=progressOf(EP);
   S={sentences,vocab:EP.vocab,d:0,r:0,cur:0,sel:-1,plays:0,rate:SET.rate,loop:false,show:false,
-     ok:new Set(k.ok||[]),off:k.off||{},kn:new Set(k.kn||[]),seen:!!k.seen,heard:!!k.heard,cards:!!k.cards,dict:new Set(k.dict||[]),dn:k.dn||{},box:k.box||{},step:k.step||{},df:k.df||0,cq:null,cs:null,cdone:null,fold:new Set(),hint:false,fans:null,hasAudio:!!EP.audioUrl,dur,stopAt:null,loopFrom:null,cont:false};
+     ok:new Set(k.ok||[]),off:k.off||{},kn:new Set(k.kn||[]),seen:!!k.seen,heard:!!k.heard,cards:!!k.cards,dict:new Set(k.dict||[]),dn:k.dn||{},box:k.box||{},step:k.step||{},df:k.df||0,cq:null,cs:null,cdone:null,fold:new Set(['verbe','nom','adjectif','adverbe','expression','autre','connu']),hint:false,fans:null,hasAudio:!!EP.audioUrl,dur,stopAt:null,loopFrom:null,cont:false};
   if(S.hasAudio){if(au.src!==EP.audioUrl)au.src=EP.audioUrl;} else au.removeAttribute('src');
   $('title').textContent=EP.title;
   $('src').textContent=S.hasAudio?'Audio original':'Voix de synthèse'; $('src').classList.toggle('on',S.hasAudio);
@@ -565,12 +817,16 @@ function showPhrase(k){                        // the window that shows the sent
   $('pop-body').innerHTML='<div class="top"><span class="tag">'+esc(v.word)+' · '+fmt(v.ctx?v.ctx[0]:startOf(v.sid))+'</span><button data-a="x" aria-label="Fermer">✕</button></div>'+
     (v.ctx?'<p class="big">'+cloze(v.ctx[2],v.form,true)+'</p><p class="rest">'+cloze(s.text,v.form,true)+'</p>':'<p class="big">'+cloze(s.text,v.form,true)+'</p>')+
     '<div class="row">'+(v.ctx?'<button class="sm pri" data-a="p-ctx" data-v="'+k+'">Réécouter l\'extrait</button><button class="sm" data-a="p-full" data-v="'+k+'">Phrase entière</button>':'<button class="sm pri" data-a="p-full" data-v="'+k+'">Réécouter</button>')+'</div>';
-  $('pop').hidden=false;
+  $('pop').dataset.kind='phrase'; $('pop').hidden=false;
 }
 $('pop').onclick=e=>{
   const b=e.target.closest('button');
-  if(e.target===$('pop')||(b&&b.dataset.a==='x')){$('pop').hidden=true;stopAll();return;}   // a tap outside the window, or on ✕
-  if(!b)return; const v=S.vocab[+b.dataset.v];
+  if(e.target===$('pop')||(b&&b.dataset.a==='x')){$('pop').hidden=true;if($('pop').dataset.kind!=='net')stopAll();return;}   // a tap outside the window, or on ✕
+  if(!b)return;
+  if(b.dataset.a==='net-save')return saveEpisode(EP);
+  if(b.dataset.a==='net-forget')return forgetEpisode(EP.id);
+  if(b.dataset.a==='net-sync'){sync().then(()=>{if(!$('pop').hidden&&$('pop').dataset.kind==='net')showNet();});return;}
+  const v=S.vocab[+b.dataset.v];
   if(b.dataset.a==='p-ctx')playCtx(v); if(b.dataset.a==='p-full')playSentence(v.sid,S.rate,false);
 };
 function sayWord(v){
@@ -723,9 +979,10 @@ function renderVocab(){
     const card=(v,k,at)=>'<div class="mini" style="--i:'+Math.min(at,6)+'">'+thumb(v,k)+'<div class="word">'+esc(v.word)+'</div><p class="hint">'+defOf(v)+'</p>'+
       '<div class="row">'+mot(v,k)+(v.ctx?'<button class="sm pri" data-a="ctx" data-v="'+k+'" title="Quelques mots de l\'épisode autour de ce mot">Extrait</button>':'<button class="sm pri" data-a="play" data-v="'+k+'">Phrase</button>')+'<button class="sm" data-a="know" data-v="'+k+'" aria-pressed="'+S.kn.has(vkey(v))+'" title="Les mots connus ne reviennent pas dans les prochains épisodes">'+(S.kn.has(vkey(v))?'✓ Je connais':'Je connais')+'</button></div></div>';
     h+='<p class="count">'+n+' mot'+(n>1?'s':'')+' dans cet épisode · '+known+' connu'+(known>1?'s':'')+'</p>';
-    POS.forEach(([key,label])=>{                 // one block per kind of word: verbs, nouns, adjectives…
-      const items=S.vocab.map((v,k)=>[v,k]).filter(x=>posOf(x[0])===key); if(!items.length)return;
-      const shut=S.fold.has(key);                // a tap on the title folds or opens the block
+    const isKnown=v=>S.kn.has(vkey(v));
+    [...POS,['connu','Connus']].forEach(([key,label])=>{   // one block per kind of word still to learn, then the words already known
+      const items=S.vocab.map((v,k)=>[v,k]).filter(x=>key==='connu'?isKnown(x[0]):!isKnown(x[0])&&posOf(x[0])===key); if(!items.length)return;
+      const shut=S.fold.has(key);                // all blocks start folded; a tap on the title opens or folds one
       h+='<h3 class="grp"><button data-a="fold" data-p="'+key+'" aria-expanded="'+!shut+'">'+label+' <span>'+items.length+'</span><span class="arw" aria-hidden="true">▾</span></button></h3>'+
          (shut?'':'<div class="grid2">'+items.map((x,at)=>card(x[0],x[1],at)).join('')+'</div>');
     });
@@ -842,7 +1099,7 @@ $('r-prev').onclick=()=>rMove(-1); $('r-next').onclick=()=>rMove(1);
 
 /* ---------- bibliothèque ---------- */
 const dayKey=d=>d.toISOString().slice(0,10);
-function touch(){try{const k='atelier:days',a=JSON.parse(store.get(k)||'[]'),t=dayKey(new Date());if(!a.includes(t)){a.push(t);store.set(k,JSON.stringify(a.slice(-60)));}}catch(e){} renderStrip();}
+function touch(){try{const k='atelier:days',a=JSON.parse(store.get(k)||'[]'),t=dayKey(new Date());if(!a.includes(t)){a.push(t);store.set(k,JSON.stringify(a.slice(-3660)));}}catch(e){} renderStrip();}
 function streak(){let a=[];try{a=JSON.parse(store.get('atelier:days')||'[]');}catch(e){}
   let n=0;const d=new Date();if(!a.includes(dayKey(d)))d.setDate(d.getDate()-1);
   while(a.includes(dayKey(d))){n++;d.setDate(d.getDate()-1);} return n;}
@@ -866,14 +1123,22 @@ function starsOfEpisode(i){
   const e=LIB[i],k=progressOf(e),n=e.sents?e.sents.length:e.blocks.reduce((a,b)=>a+b[1].length,0);
   return levelsOf({heard:k.heard,seen:k.seen,cards:k.cards,nv:e.vocab.length,kn:(k.kn||[]).length,dict:(k.dict||[]).length,ok:(k.ok||[]).length,n}).reduce((a,l)=>a+starsOf(l.p),0);
 }
+let calShift=0;                                 // 0 = this month, -1 = last month…
 function renderProgres(){
   const L=levels(), st=L.reduce((a,l)=>a+starsOf(l.p),0), n=S.sentences.length, nv=S.vocab.length, kn=S.vocab.filter(v=>S.kn.has(vkey(v))).length;
   const notes=Object.values(S.dn), moy=notes.length?(notes.reduce((a,b)=>a+b,0)/notes.length).toFixed(1).replace('.',','):'–';
   const tile=(b,t)=>'<div class="tile"><b>'+b+'</b><span>'+t+'</span></div>';
   $('pg-tiles').innerHTML=tile('★ '+st+' / 18','étoiles dans cet épisode')+tile(streak(),'jours de suite')+tile(kn+' / '+nv,'mots reconnus')+tile(S.dict.size+' / '+n,'phrases validées en dictée')+tile(moy,'note moyenne en dictée, sur 20')+tile(S.ok.size+' / '+n,'phrases par cœur');
   let days=[];try{days=JSON.parse(store.get('atelier:days')||'[]');}catch(e){}
-  let h='',on=0;for(let i=13;i>=0;i--){const k=addDays(-i),ok=days.includes(k);on+=ok?1:0;h+='<i class="'+(ok?'on':'')+(i===0?' today':'')+'"></i>';}
-  $('pg-days').innerHTML=h; $('pg-days-t').textContent=on+' jour'+(on>1?'s':'')+' d\'entraînement sur 14. Le rond entouré, c\'est aujourd\'hui.';
+  const first=new Date(); first.setDate(1); first.setMonth(first.getMonth()+calShift);          // the month shown
+  const y=first.getFullYear(), m=first.getMonth(), last=new Date(y,m+1,0).getDate(), lead=(first.getDay()+6)%7, now=dayKey(new Date());
+  const key=(yy,mm,dd)=>yy+'-'+String(mm+1).padStart(2,'0')+'-'+String(dd).padStart(2,'0');
+  let h='LMMJVSD'.split('').map(d=>'<span>'+d+'</span>').join(''), on=0;
+  const before=new Date(y,m,0).getDate(); for(let i=lead;i>0;i--)h+='<i class="out">'+(before-i+1)+'</i>';
+  for(let d=1;d<=last;d++){const k=key(y,m,d), ok=days.includes(k); on+=ok?1:0; h+='<i class="'+(ok?'on':'')+(k===now?' today':'')+'"'+(ok?' aria-label="'+d+', jour d\'entraînement"':'')+'>'+d+'</i>';}
+  for(let d=1;(lead+last+d-1)%7;d++)h+='<i class="out">'+d+'</i>';
+  $('pg-cal').innerHTML=h; $('cal-title').textContent=first.toLocaleDateString('fr-FR',{month:'long',year:'numeric'}); $('cal-next').disabled=calShift>=0;
+  $('pg-days-t').textContent=on+' jour'+(on>1?'s':'')+' d\'entraînement ce mois-ci · '+days.length+' en tout.';
   $('pg-levels').innerHTML=L.map((l,i)=>'<div class="lv"><b>'+(i+1)+' · '+l.name+'</b><span class="s3">'+starRow(starsOf(l.p))+'</span><div class="bar"><i style="width:'+Math.round(100*l.p)+'%"></i></div></div>').join('');
   const c=[0,0,0,0,0]; S.vocab.forEach(v=>{c[boxOf(v).b-1]++;}); const mx=Math.max(1,...c);
   $('pg-boxes').innerHTML=c.map((x,i)=>'<div><b>'+x+'</b><i style="height:'+Math.round(70*x/mx)+'%"></i><span>Boîte '+(i+1)+'<br>'+(i?'+':'')+GAPS[i]+' j</span></div>').join('');
@@ -882,6 +1147,44 @@ function renderProgres(){
 $('pg-worlds').onclick=e=>{const b=e.target.closest('[data-w]'); if(b){openEpisode(+b.dataset.w);location.hash='carte';}};
 $('go-progres').onclick=$('strip').onclick=()=>{location.hash='progres';};
 $('go-reglages').onclick=()=>{location.hash='reglages';};
+$('go-net').onclick=()=>showNet();
+$('cal-prev').onclick=()=>{calShift--;renderProgres();}; $('cal-next').onclick=()=>{if(calShift<0)calShift++;renderProgres();};
+$('set-add').onclick=()=>{location.hash='ajouter';};
+
+/* ---------- dictionnaire: search the words and the sentences of every episode ---------- */
+const fold=t=>String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[’`]/g,"'");     // "Écoute" and "ecoute" are the same search
+function markHit(text,q){                       // the sentence with the words that start like the search shown in yellow
+  return esc(text).replace(/[A-Za-zÀ-ÖØ-öø-ÿŒœ]+/g,w=>fold(w).startsWith(q)?'<mark>'+w+'</mark>':w);
+}
+function renderDico(){
+  const q=fold($('dico-q').value.trim()).replace(/^(?:(?:un|une|des|le|la|les|du|se)\s+|l'|d'|s')/,''), out=$('dico-out');
+  const nw=LIB.reduce((a,e)=>a+e.vocab.length,0), ns=LIB.reduce((a,e)=>a+(e.sents?e.sents.length:0),0);
+  if(q.length<2){out.innerHTML='<p class="hint">'+nw+' mot'+(nw>1?'s':'')+' et '+ns+' phrase'+(ns>1?'s':'')+' dans '+LIB.length+' épisode'+(LIB.length>1?'s':'')+'. Tape au moins deux lettres : tu verras le mot, puis tous les endroits où on l\'entend.</p>';return;}
+  const words=[], hits=[];
+  LIB.forEach((e,ei)=>{
+    e.vocab.forEach((v,k)=>{const a=fold(lem(v.word)), f=fold(v.form||''); if(a.startsWith(q)||f.startsWith(q)||(q.length>=4&&a.includes(q)))words.push({e,ei,v,k,exact:a===q||f===q});});
+    (e.sents||[]).forEach((x,i)=>{ if(fold(x.text).split(/[^a-zœ]+/).some(w=>w.startsWith(q)))hits.push({e,ei,i,x}); });
+  });
+  words.sort((a,b)=>b.exact-a.exact||a.v.word.length-b.v.word.length);
+  const many=LIB.length>1, W=words.slice(0,12), H=hits.slice(0,40);
+  let h='';
+  if(W.length)h+='<div class="card">'+W.map(o=>{const v=o.v, known=o.ei===epIndex?S.kn.has(vkey(v)):((progressOf(o.e).kn||[]).includes(vkey(v)));
+    return '<div class="dw"><div class="head"><b>'+esc(v.word)+'</b><span class="pill">'+((POS.find(p=>p[0]===posOf(v))||['',''])[1].replace(/s$/,'').toLowerCase()||'mot')+'</span>'+(known?'<span class="pill" style="color:var(--good)">connu</span>':'')+(many?'<span class="hint" style="font-size:.76rem">'+esc(o.e.title)+'</span>':'')+'</div>'+
+      '<p class="hint">'+defOf(v)+'</p>'+(fold(v.form||'')!==fold(lem(v.word))&&v.form?'<p class="hint">Dans l\'épisode : « '+esc(v.form)+' »</p>':'')+
+      '<div class="row"><button class="sm" data-a="d-say" data-e="'+o.ei+'" data-v="'+o.k+'">Mot</button><button class="sm pri" data-a="d-sent" data-e="'+o.ei+'" data-i="'+v.sid+'">Écouter la phrase</button></div></div>';}).join('')+'</div>';
+  if(H.length)h+='<div class="card"><h3>'+hits.length+' phrase'+(hits.length>1?'s':'')+' où on l\'entend</h3><div>'+H.map(o=>
+      '<button class="hit" data-a="d-sent" data-e="'+o.ei+'" data-i="'+o.i+'"><small>'+(many?esc(o.e.title)+' · ':'')+fmt(o.x.start)+'</small>'+markHit(o.x.text,q)+'</button>').join('')+'</div>'+
+      (hits.length>H.length?'<p class="hint">Les '+H.length+' premières sont affichées. Tape plus de lettres pour préciser.</p>':'')+'</div>';
+  if(!h)h='<p class="hint">Rien trouvé pour « '+esc($('dico-q').value.trim())+' » dans tes épisodes. Ce dictionnaire contient seulement ce qui a été dit dans les épisodes que tu as ajoutés.</p>';
+  out.innerHTML=h;
+}
+$('dico-q').oninput=()=>renderDico();
+$('dico-out').onclick=e=>{
+  const b=e.target.closest('[data-a]'); if(!b)return; const ei=+b.dataset.e;
+  if(ei!==epIndex){openEpisode(ei);renderDico();}                              // a sentence of another episode: that episode becomes the open one
+  if(b.dataset.a==='d-say')return sayWord(S.vocab[+b.dataset.v]);
+  if(b.dataset.a==='d-sent')return playSentence(+b.dataset.i,S.rate,false);
+};
 function renderReglages(){$('set-rate').value=String(SET.rate);$('set-seuil').value=String(SET.seuil);$('set-jeu').value=String(SET.jeu);$('set-reset').textContent='Tout recommencer';$('set-cancel').hidden=true;}
 $('set-rate').onchange=e=>{SET.rate=+e.target.value;saveSet();S.rate=SET.rate;$('p-rate').value=String(SET.rate);if(S.hasAudio)au.playbackRate=S.rate;};
 $('set-seuil').onchange=e=>{SET.seuil=+e.target.value;saveSet();};
@@ -899,26 +1202,24 @@ function renderStrip(){
 }
 const BALLOON='<svg class="balloon" viewBox="0 0 44 58" aria-hidden="true"><path d="M22 2C10 2 3 11 3 21c0 9 8 15 13 20h12c5-5 13-11 13-20C41 11 34 2 22 2z" fill="#ff5a5f" stroke="#fff" stroke-width="2"/><path d="M22 2c-5 5-6 30-3 39M22 2c5 5 6 30 3 39" stroke="#fff" stroke-width="2" fill="none"/><path d="M17 41l1 7M27 41l-1 7" stroke="#8a5a2b" stroke-width="2"/><rect x="16" y="48" width="12" height="8" rx="2" fill="#c98a3d" stroke="#fff" stroke-width="2"/></svg>';
 const LOCK='<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2.5" fill="#fff" fill-opacity=".25"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
-function renderCarte(){
-  const map=$('map'); map.className='map w'+(epIndex%4); if(!map.offsetWidth)return;
-  const L=levels(), W=map.offsetWidth, xs=[.22,.74,.3,.7,.24,.72], y0=170, dy=100;
-  const pts=L.map((l,i)=>[Math.round(W*xs[i]),y0+i*dy]); const end=[Math.round(W*.5),y0+L.length*dy+6];
-  $('nodes').innerHTML=L.map((l,i)=>{
-    const cls=l.done?'done':l.play?'play':l.open?'open':'lock', rev=xs[i]>.5;
-    return '<button class="node '+cls+(rev?' rev':'')+'" style="'+(rev?'right:'+(W-pts[i][0]):'left:'+pts[i][0])+'px;top:'+pts[i][1]+'px" data-l="'+i+'" aria-label="Niveau '+(i+1)+', '+l.name+(l.open?'':', verrouillé')+'">'+
-      '<span class="disc">'+(l.play?BALLOON:'')+(l.open?(l.done?'★':i+1):LOCK)+'</span>'+
-      '<span class="lab"><b>'+(i+1)+' · '+l.name+'</b><span>'+l.sub+'</span><span class="s3">'+starRow(starsOf(l.p))+'</span></span></button>';
-  }).join('')+'<div class="chest" style="left:'+end[0]+'px;top:'+end[1]+'px"><svg viewBox="0 0 64 48" width="72" height="54" aria-hidden="true"><rect x="4" y="18" width="56" height="26" rx="5" fill="#b9762d" stroke="#fff" stroke-width="3"/><path d="M4 22c0-10 8-18 18-18h20c10 0 18 8 18 18z" fill="#d99042" stroke="#fff" stroke-width="3"/><rect x="27" y="17" width="10" height="12" rx="3" fill="#ffc93c" stroke="#fff" stroke-width="2"/></svg>'+(L.every(l=>l.done)?'Trésor gagné !':'Le trésor')+'</div>';
-  const all=[...pts,end]; let d='M'+all[0][0]+' '+all[0][1];
-  for(let i=1;i<all.length;i++){const a=all[i-1],b=all[i],m=(a[1]+b[1])/2; d+=' C'+a[0]+' '+m+' '+b[0]+' '+m+' '+b[0]+' '+b[1];}
-  $('trail').innerHTML='<path d="'+d+'" stroke="var(--card)" stroke-width="14"/><path d="'+d+'" stroke="var(--edge)" stroke-opacity=".55" stroke-width="5" stroke-dasharray="2 14"/>';
-  map.style.minHeight=(end[1]+120)+'px';
+function renderCarte(){                         // the home page: the episode, today's work, the six steps
+  const L=levels(), n=S.vocab.length, kn=S.vocab.filter(v=>S.kn.has(vkey(v))).length, st=L.reduce((a,l)=>a+starsOf(l.p),0), days=streak();
+  const due=S.cards?dueCards().length:0, todo=n-kn, learn=L[2].open?2:1, CHECK='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  $('home').innerHTML=
+    '<div class="brand">'+(SERVER&&HAS_LOGO?'<img src="logo.png" alt="">':'')+'<div><b>Atelier d\'épisode</b><small>'+(days?days+' jour'+(days>1?'s':'')+' de suite':'Un épisode à la fois')+' · ★ '+st+' / '+(3*L.length)+'</small></div></div>'+
+    '<div class="card"><div class="home-top"><b>Mots connus</b><span>'+kn+' / '+n+'</span></div><div class="bar" aria-hidden="true"><i style="width:'+(n?100*kn/n:0)+'%"></i></div><div class="today">'+
+      '<div class="cell"><div class="num">'+todo+'</div><div class="lbl">mot'+(todo>1?'s':'')+' à apprendre</div></div>'+
+      '<div class="cell"><div class="num">'+due+'</div><div class="lbl">carte'+(due>1?'s':'')+' à revoir</div></div>'+
+      '<button class="pri" data-l="'+learn+'">Apprendre</button><button class="pri" data-l="3">Réviser</button></div></div>'+
+    '<div class="card"><h3>Le parcours</h3><div class="path">'+L.map((l,i)=>
+      '<button class="'+(l.done?'done':l.play?'play':l.open?'':'lock')+'" data-l="'+i+'" aria-label="Étape '+(i+1)+', '+l.name+(l.open?'':', verrouillée')+'">'+
+      '<span class="no">'+(l.done?CHECK:i+1)+'</span><span class="txt"><b>'+l.name+'</b></span><span class="s3">'+starRow(starsOf(l.p))+'</span></button>').join('')+'</div></div>';
 }
 let toastT=0;
 function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true;},2200);}
-$('nodes').onclick=e=>{
+$('home').onclick=e=>{
   const b=e.target.closest('[data-l]'); if(!b)return; const i=+b.dataset.l, l=levels()[i];
-  if(!l.open){toast('Termine d\'abord le niveau '+(i>=4?1:i)+' pour ouvrir celui-ci.');return;}
+  if(!l.open){toast('Termine d\'abord l\'étape '+(i>=4?1:i)+' pour ouvrir celle-ci.');return;}
   if(l.mode){S.vmode=l.mode;renderVocab();}
   location.hash=l.view;
 };
@@ -1012,14 +1313,14 @@ $('e-load').onclick=async()=>{
 
 /* ---------- shell ---------- */
 function renderAll(){renderSubs();renderLib();renderDictee();renderVocab();renderReciter();renderCarte();}
-const VIEWS=['carte','episode','vocabulaire','dictee','reciter','ajouter','progres','reglages'];
+const VIEWS=['carte','episode','vocabulaire','dictee','reciter','dico','ajouter','progres','reglages'];
 function route(){
   const v=VIEWS.includes(location.hash.slice(1))?location.hash.slice(1):'carte';
   VIEWS.forEach(x=>$('view-'+x).classList.toggle('cur',x===v));
   document.querySelectorAll('.tabbar a').forEach(a=>a.classList.toggle('cur',a.getAttribute('href')==='#'+v));
   if(!(S&&S.hasAudio&&(S.cont||S.miniPaused)))stopAll();          // an episode being listened to keeps playing in every section
   $('pop').hidden=true; $('strip').classList.toggle('off',v!=='carte');                  // stars and streak only on the map, to leave room elsewhere
-  renderMini(); $('main').scrollTop=0; if(v==='episode')setCur(S.cur); if(v==='carte')renderCarte(); if(v==='progres')renderProgres(); if(v==='reglages')renderReglages();
+  renderMini(); $('main').scrollTop=0; if(v==='episode')setCur(S.cur); if(v==='carte')renderCarte(); if(v==='progres')renderProgres(); if(v==='reglages')renderReglages(); if(v==='dico')renderDico();
   $('go-progres').toggleAttribute('aria-current',v==='progres'); $('go-reglages').toggleAttribute('aria-current',v==='reglages'); if(v==='progres')$('go-progres').setAttribute('aria-current','page'); if(v==='reglages')$('go-reglages').setAttribute('aria-current','page');
 }
 addEventListener('hashchange',route);
@@ -1031,11 +1332,15 @@ const fromServer=d=>{
 };
 async function boot(){
   try{
-    const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),2500);
+    if(CAN_SAVE)navigator.serviceWorker.register('sw.js').catch(()=>{});     // the helper that answers from this device when the computer is silent
+    const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),6000);
     const r=await fetch('api/episodes',{cache:'no-store',signal:ctl.signal}); clearTimeout(t);
     if(!r.ok||!(r.headers.get('content-type')||'').includes('json'))throw 0;
     const list=await r.json(); if(!Array.isArray(list))throw 0;
-    store.mem=await (await fetch('api/store',{cache:'no-store'})).json(); SERVER=true; $('mini-logo').innerHTML='<img src="icon-192.png" alt="">';
+    OFFLINE=!!r.headers.get('X-Atelier-Offline');
+    const kept=await fetch('api/store',{cache:'no-store'}); OFFLINE=OFFLINE||!!kept.headers.get('X-Atelier-Offline');
+    store.adopt(await kept.json(),OFFLINE); SERVER=true;
+    const mark=new Image(); mark.onload=()=>{HAS_LOGO=true;if(S&&S.vocab)renderCarte();}; mark.src='logo.png';       // the mascot, when the server has one $('mini-logo').innerHTML='<img src="icon-192.png" alt="">';
     Object.assign(SET,store.mem['atelier:set']||{}); $('p-rate').value=String(SET.rate);
     const ready=[];
     for(const e of list){
@@ -1051,6 +1356,7 @@ async function boot(){
   let first=0; try{const last=JSON.parse(store.get('atelier:last')||'null'); const i=LIB.findIndex(e=>(e.id||e.title)===last); if(i>=0)first=i;}catch(e){}
   openEpisode(first);
   route();
+  renderNet(); if(SERVER&&outbox.count())sync();
 }
 boot();
 </script>
