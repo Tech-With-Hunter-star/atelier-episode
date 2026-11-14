@@ -1,0 +1,577 @@
+{
+ "version": 1,
+ "title": "Épisode d'essai · Ma routine du matin",
+ "level": "A1",
+ "audio": null,
+ "duration": 47.3,
+ "text_source": "transcript",
+ "sentences": [
+  {
+   "text": "Bonjour et bienvenue dans cet épisode d'essai.",
+   "para": true,
+   "start": 0.4,
+   "end": 4.47,
+   "words": [
+    [
+     "bonjour",
+     0.5,
+     1.03
+    ],
+    [
+     "et",
+     1.11,
+     1.39
+    ],
+    [
+     "bienvenue",
+     1.47,
+     2.1
+    ],
+    [
+     "dans",
+     2.18,
+     2.56
+    ],
+    [
+     "cet",
+     2.64,
+     2.97
+    ],
+    [
+     "épisode",
+     3.05,
+     3.58
+    ],
+    [
+     "d'essai",
+     3.66,
+     4.19
+    ]
+   ]
+  },
+  {
+   "text": "Aujourd'hui, je parle de ma routine du matin.",
+   "para": false,
+   "start": 4.77,
+   "end": 8.95,
+   "words": [
+    [
+     "aujourd'hui",
+     4.87,
+     5.6
+    ],
+    [
+     "je",
+     5.68,
+     5.96
+    ],
+    [
+     "parle",
+     6.04,
+     6.47
+    ],
+    [
+     "de",
+     6.55,
+     6.83
+    ],
+    [
+     "ma",
+     6.91,
+     7.19
+    ],
+    [
+     "routine",
+     7.27,
+     7.8
+    ],
+    [
+     "du",
+     7.88,
+     8.16
+    ],
+    [
+     "matin",
+     8.24,
+     8.67
+    ]
+   ]
+  },
+  {
+   "text": "Je me réveille à sept heures et j'ouvre la fenêtre.",
+   "para": true,
+   "start": 9.25,
+   "end": 14.2,
+   "words": [
+    [
+     "je",
+     9.35,
+     9.63
+    ],
+    [
+     "me",
+     9.71,
+     9.99
+    ],
+    [
+     "réveille",
+     10.07,
+     10.65
+    ],
+    [
+     "à",
+     10.73,
+     10.96
+    ],
+    [
+     "sept",
+     11.04,
+     11.42
+    ],
+    [
+     "heures",
+     11.5,
+     11.98
+    ],
+    [
+     "et",
+     12.06,
+     12.34
+    ],
+    [
+     "j'ouvre",
+     12.42,
+     12.95
+    ],
+    [
+     "la",
+     13.03,
+     13.31
+    ],
+    [
+     "fenêtre",
+     13.39,
+     13.92
+    ]
+   ]
+  },
+  {
+   "text": "Ensuite, je prépare un café et je mange une tartine.",
+   "para": false,
+   "start": 14.5,
+   "end": 19.45,
+   "words": [
+    [
+     "ensuite",
+     14.6,
+     15.13
+    ],
+    [
+     "je",
+     15.21,
+     15.49
+    ],
+    [
+     "prépare",
+     15.57,
+     16.1
+    ],
+    [
+     "un",
+     16.18,
+     16.46
+    ],
+    [
+     "café",
+     16.54,
+     16.92
+    ],
+    [
+     "et",
+     17.0,
+     17.28
+    ],
+    [
+     "je",
+     17.36,
+     17.64
+    ],
+    [
+     "mange",
+     17.72,
+     18.15
+    ],
+    [
+     "une",
+     18.23,
+     18.56
+    ],
+    [
+     "tartine",
+     18.64,
+     19.17
+    ]
+   ]
+  },
+  {
+   "text": "Le matin, j'aime marcher dans mon quartier.",
+   "para": true,
+   "start": 19.75,
+   "end": 23.62,
+   "words": [
+    [
+     "le",
+     19.85,
+     20.13
+    ],
+    [
+     "matin",
+     20.21,
+     20.64
+    ],
+    [
+     "j'aime",
+     20.72,
+     21.2
+    ],
+    [
+     "marcher",
+     21.28,
+     21.81
+    ],
+    [
+     "dans",
+     21.89,
+     22.27
+    ],
+    [
+     "mon",
+     22.35,
+     22.68
+    ],
+    [
+     "quartier",
+     22.76,
+     23.34
+    ]
+   ]
+  },
+  {
+   "text": "Je rencontre souvent ma voisine devant la boulangerie.",
+   "para": false,
+   "start": 23.92,
+   "end": 28.6,
+   "words": [
+    [
+     "je",
+     24.02,
+     24.3
+    ],
+    [
+     "rencontre",
+     24.38,
+     25.01
+    ],
+    [
+     "souvent",
+     25.09,
+     25.62
+    ],
+    [
+     "ma",
+     25.7,
+     25.98
+    ],
+    [
+     "voisine",
+     26.06,
+     26.59
+    ],
+    [
+     "devant",
+     26.67,
+     27.15
+    ],
+    [
+     "la",
+     27.23,
+     27.51
+    ],
+    [
+     "boulangerie",
+     27.59,
+     28.32
+    ]
+   ]
+  },
+  {
+   "text": "Elle me souhaite toujours une bonne journée.",
+   "para": false,
+   "start": 28.9,
+   "end": 32.87,
+   "words": [
+    [
+     "elle",
+     29.0,
+     29.38
+    ],
+    [
+     "me",
+     29.46,
+     29.74
+    ],
+    [
+     "souhaite",
+     29.82,
+     30.4
+    ],
+    [
+     "toujours",
+     30.48,
+     31.06
+    ],
+    [
+     "une",
+     31.14,
+     31.47
+    ],
+    [
+     "bonne",
+     31.55,
+     31.98
+    ],
+    [
+     "journée",
+     32.06,
+     32.59
+    ]
+   ]
+  },
+  {
+   "text": "Après la promenade, je commence à travailler.",
+   "para": true,
+   "start": 33.17,
+   "end": 37.14,
+   "words": [
+    [
+     "après",
+     33.27,
+     33.7
+    ],
+    [
+     "la",
+     33.78,
+     34.06
+    ],
+    [
+     "promenade",
+     34.14,
+     34.77
+    ],
+    [
+     "je",
+     34.85,
+     35.13
+    ],
+    [
+     "commence",
+     35.21,
+     35.79
+    ],
+    [
+     "à",
+     35.87,
+     36.1
+    ],
+    [
+     "travailler",
+     36.18,
+     36.86
+    ]
+   ]
+  },
+  {
+   "text": "Ce n'est pas compliqué, mais cette habitude me donne de l'énergie.",
+   "para": false,
+   "start": 37.44,
+   "end": 43.3,
+   "words": [
+    [
+     "ce",
+     37.54,
+     37.82
+    ],
+    [
+     "n'est",
+     37.9,
+     38.33
+    ],
+    [
+     "pas",
+     38.41,
+     38.74
+    ],
+    [
+     "compliqué",
+     38.82,
+     39.45
+    ],
+    [
+     "mais",
+     39.53,
+     39.91
+    ],
+    [
+     "cette",
+     39.99,
+     40.42
+    ],
+    [
+     "habitude",
+     40.5,
+     41.08
+    ],
+    [
+     "me",
+     41.16,
+     41.44
+    ],
+    [
+     "donne",
+     41.52,
+     41.95
+    ],
+    [
+     "de",
+     42.03,
+     42.31
+    ],
+    [
+     "l'énergie",
+     42.39,
+     43.02
+    ]
+   ]
+  },
+  {
+   "text": "Merci d'avoir écouté, et à bientôt !",
+   "para": true,
+   "start": 43.6,
+   "end": 46.86,
+   "words": [
+    [
+     "merci",
+     43.7,
+     44.13
+    ],
+    [
+     "d'avoir",
+     44.21,
+     44.74
+    ],
+    [
+     "écouté",
+     44.82,
+     45.3
+    ],
+    [
+     "et",
+     45.38,
+     45.66
+    ],
+    [
+     "à",
+     45.74,
+     45.97
+    ],
+    [
+     "bientôt",
+     46.05,
+     46.58
+    ]
+   ]
+  }
+ ],
+ "vocab": [
+  {
+   "word": "se réveiller",
+   "form": "réveille",
+   "def": "Arrêter de dormir, le matin.",
+   "sid": 2,
+   "pos": "verbe",
+   "img": "a woman with short hair stretching in bed next to an alarm clock, morning light"
+  },
+  {
+   "word": "une fenêtre",
+   "form": "fenêtre",
+   "def": "L'ouverture dans un mur, avec une vitre, pour voir dehors.",
+   "sid": 2,
+   "pos": "nom",
+   "img": "an open window with curtains and a blue sky outside"
+  },
+  {
+   "word": "préparer",
+   "form": "prépare",
+   "def": "Faire quelque chose pour que ce soit prêt.",
+   "sid": 3,
+   "pos": "verbe",
+   "img": "hands pouring coffee into a cup on a kitchen table"
+  },
+  {
+   "word": "une tartine",
+   "form": "tartine",
+   "def": "Un morceau de pain avec du beurre ou de la confiture.",
+   "sid": 3,
+   "pos": "nom",
+   "img": "a slice of bread with butter and jam on a plate"
+  },
+  {
+   "word": "un quartier",
+   "form": "quartier",
+   "def": "Une partie d'une ville, autour de chez soi.",
+   "sid": 4,
+   "pos": "nom",
+   "img": "a quiet street with small houses, trees and a bakery"
+  },
+  {
+   "word": "souvent",
+   "form": "souvent",
+   "def": "Beaucoup de fois.",
+   "sid": 5,
+   "pos": "adverbe",
+   "img": "a calendar with many days marked by a small sun"
+  },
+  {
+   "word": "une voisine",
+   "form": "voisine",
+   "def": "Une femme qui habite à côté de chez soi.",
+   "sid": 5,
+   "pos": "nom",
+   "img": "two women waving at each other from neighbouring doors"
+  },
+  {
+   "word": "souhaiter",
+   "form": "souhaite",
+   "def": "Dire qu'on veut du bien à quelqu'un.",
+   "sid": 6,
+   "pos": "verbe",
+   "img": "a woman smiling and waving to a friend in the street"
+  },
+  {
+   "word": "une habitude",
+   "form": "habitude",
+   "def": "Quelque chose qu'on fait régulièrement.",
+   "sid": 8,
+   "pos": "nom",
+   "img": "a cup of coffee and walking shoes next to a door, every morning"
+  },
+  {
+   "word": "à bientôt",
+   "form": "à bientôt",
+   "def": "Ce qu'on dit quand on va se revoir dans peu de temps.",
+   "sid": 9,
+   "pos": "expression",
+   "img": "a hand waving goodbye in front of a door"
+  }
+ ]
+}

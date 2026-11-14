@@ -1,0 +1,16 @@
+# PostgreSQL for Atelier d'épisode, on this computer only.
+#   docker compose up -d      start        docker compose down       stop (the data stays)
+# The password is a local one: the port is only opened to this computer (127.0.0.1), not to the network.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: atelier
+      POSTGRES_PASSWORD: atelier
+      POSTGRES_DB: atelier
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - atelier-db:/var/lib/postgresql/data
+volumes:
+  atelier-db:

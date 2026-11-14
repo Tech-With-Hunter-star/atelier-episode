@@ -1,0 +1,14 @@
+.env
+__pycache__/
+*.pyc
+.DS_Store
+# podcasts belong to their authors and stay out of the repository: audio, transcripts, episode.json, images
+episodes/
+exemples/
+# your progress and settings
+data/
+_backup/
+*.mp3
+*.m4a
+*.wav
+.pytest_cache/

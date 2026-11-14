@@ -1,0 +1,8 @@
+faster-whisper
+anthropic
+python-dotenv
+fastapi
+uvicorn
+python-multipart
+psycopg[binary]
+edge-tts

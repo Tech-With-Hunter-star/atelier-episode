@@ -1,0 +1,10 @@
+# Image generation on the Mac (large: install only if you want pictures).
+#
+# torch is kept below 2.15 on purpose: PyTorch 2.15 (28 Oct 2026) needs macOS 15 to use the Mac's graphics chip.
+# On macOS 14 it crashes with "-[MPSNDArray arrayViewWithShape:strides:]: unrecognized selector".
+# After upgrading macOS to 15 or later, this limit can be removed.
+torch<2.15
+diffusers
+transformers
+accelerate
+safetensors
