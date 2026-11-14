@@ -130,5 +130,6 @@ The database tests run when `ATELIER_TEST_DB` points to a throwaway PostgreSQL d
 
 ## How it was built
 
-Designed and directed by Leilei Zhang; most of the code was written with Claude (Anthropic) as a pair
-programmer, then run and tested on a MacBook Pro M1 Pro.
+Product design, technical decisions and testing by Leilei Zhang. Built with Claude (Anthropic) as an AI
+coding assistant working under my direction: I defined what each part had to do, reviewed the behaviour
+on a MacBook Pro M1 Pro, and decided every change.
