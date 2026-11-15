@@ -190,3 +190,32 @@ def test_words_added_before_the_table_existed_are_brought_in(root, test_db):
         conn.commit()
         db.init(conn)
         assert count(conn, "user_words") == 1
+
+
+def test_written_texts_and_their_mistakes_have_their_own_tables(root, test_db):
+    import db
+    one = {"id": 1794724235000, "at": 1794724235000, "consigne": "Présente-toi", "texte": "salut, je suis 20 ans", "lang": "en",
+           "fixedAt": 1794724240000,
+           "res": {"corrige": "Salut, j'ai 20 ans.", "note": 9, "niveau": "A1", "commentaire": "ok", "modele": "m",
+                   "erreurs": [{"extrait": "salut", "correction": "Salut", "type": "ponctuation", "explication": "capital"},
+                               {"extrait": "je suis", "correction": "j'ai", "type": "conjugaison", "explication": "avoir"},
+                               {"extrait": "", "correction": "x", "type": "accent"}]}}
+    two = {"id": 1794724300000, "at": 1794724300000, "consigne": "", "texte": "je mange un pomme", "res": None,
+           "lecon": "Road to A1/Unite 7/#c5", "leconTitre": "Unite 7 · Chapitre 5"}
+    with db.connect(test_db) as conn:
+        db.init(conn)
+        db.store_put(conn, "atelier:ecrits", [one, two, {"id": "x"}, "bruit"])
+        assert conn.execute("select body, corrected, score, corrected_at is not null from writings order by id").fetchall() == [
+            ("salut, je suis 20 ans", "Salut, j'ai 20 ans.", 9, True), ("je mange un pomme", None, None, False)]
+        assert conn.execute("select lesson from writings order by id").fetchall() == [(None,), ("Road to A1/Unite 7/#c5",)]
+        assert conn.execute("select kind, count(*) from writing_errors group by kind order by kind").fetchall() == [
+            ("conjugaison", 1), ("ponctuation", 1)]
+        db.store_put(conn, "atelier:ecrits", [one, two])                 # saving again changes nothing
+        assert count(conn, "writings") == 2 and count(conn, "writing_errors") == 2
+        db.store_put(conn, "atelier:ecrits", [two])                      # a text she deleted takes its mistakes with it
+        assert count(conn, "writings") == 1 and count(conn, "writing_errors") == 0
+        conn.execute("drop table writing_errors; drop table writings")   # a database from before these tables
+        conn.execute("update user_store set value = %s where key = 'atelier:ecrits'", (db.Jsonb([one]),))
+        conn.commit()
+        db.init(conn)
+        assert count(conn, "writings") == 1 and count(conn, "writing_errors") == 2

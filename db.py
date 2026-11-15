@@ -7,6 +7,7 @@ With it (ATELIER_DB set in .env), episodes and progress live in PostgreSQL; audi
     python db.py init      create the tables (schema.sql); safe to run again
     python db.py sync      load every episodes/<folder>/episode.json into the tables, and bring in data/store.json once
     python db.py status    how many rows there are
+    python db.py cours-vocab   load the course words (cours/**/*.vocab.json) into the dictionary
 
 ATELIER_DB is an ordinary connection address, for example
     postgresql://atelier:atelier@localhost:5432/atelier
@@ -52,19 +53,24 @@ def init(conn):
     if old:
         rebuild_words(conn)
     rebuild_added(conn)                             # words added before this table existed
+    rebuild_writings(conn)                          # texts written before these tables existed
     conn.commit()
 
 
-def lexicon_id(conn, word, pos=None):
-    """The number of a word in the dictionary; the word is added if it is new. A known kind of word is kept up to date."""
+def lexicon_id(conn, word, pos=None, display=None):
+    """The number of a word in the dictionary; the word is added if it is new. A known kind of word is kept up to date.
+    display is the form shown to the learner (with its article); a row that only has the bare word gets it."""
     lemma = norm(word)
-    found = conn.execute("select id from lexicon where lemma = %s", (lemma,)).fetchone()
+    shown = str(display or word).strip()
+    found = conn.execute("select id, display from lexicon where lemma = %s", (lemma,)).fetchone()
     if found:
         if pos:
             conn.execute("update lexicon set pos = %s where id = %s and pos is distinct from %s", (pos, found[0], pos))
+        if display and found[1].lower() == lemma:
+            conn.execute("update lexicon set display = %s where id = %s", (shown, found[0]))
         return found[0]
     return conn.execute("insert into lexicon (lemma, display, pos) values (%s, %s, %s) on conflict (lemma) do update"
-                        " set lemma = excluded.lemma returning id", (lemma, str(word).strip(), pos)).fetchone()[0]
+                        " set lemma = excluded.lemma returning id", (lemma, shown, pos)).fetchone()[0]
 
 
 # ----------------------------------------------------------------------------- content: files -> tables
@@ -211,11 +217,51 @@ def store_put(conn, key, value, user=USER):
             rebuild_words(conn, user)
         elif WORDS_KEY.match(key):
             _added_rows(conn, user, WORDS_KEY.match(key).group(1), value if isinstance(value, list) else [])
+        elif key == "atelier:cours-rev":
+            rebuild_words(conn, user)
+        elif key == "atelier:ecrits":
+            _writing_rows(conn, user, value if isinstance(value, list) else [])
         elif key == "atelier:days":
             days = sorted({d for d in map(_day, value if isinstance(value, list) else []) if d})
             with conn.cursor() as cur:
                 cur.executemany("insert into activity_days (user_id, day) values (%s,%s) on conflict do nothing",
                                 [(user, d) for d in days])                    # days are only ever added
+
+
+def _moment(ms):
+    """The app counts time in milliseconds since 1970."""
+    try:
+        return datetime.datetime.fromtimestamp(float(ms) / 1000, datetime.timezone.utc)
+    except (TypeError, ValueError, OverflowError, OSError):
+        return None
+
+
+def _writing_rows(conn, user, texts):
+    """Turn the app's list of written texts into writings and writing_errors rows (the list is the truth: rows are replaced)."""
+    conn.execute("delete from writings where user_id = %s", (user,))          # the mistakes go with their text
+    for t in texts:
+        if not isinstance(t, dict) or _int(t.get("id")) is None or not str(t.get("texte") or "").strip():
+            continue
+        res = t.get("res") if isinstance(t.get("res"), dict) else {}
+        score = res.get("note") if isinstance(res.get("note"), (int, float)) and not isinstance(res.get("note"), bool) else None
+        conn.execute(
+            "insert into writings (user_id, id, written_at, prompt, body, corrected, score, level, comment, model, corrected_at,"
+            " lesson) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) on conflict do nothing",
+            (user, _int(t["id"]), _moment(t.get("at")) or _moment(t["id"]) or datetime.datetime.now(datetime.timezone.utc),
+             str(t.get("consigne") or ""), str(t["texte"]), res.get("corrige"), score, res.get("niveau"), res.get("commentaire"),
+             res.get("modele"), _moment(t.get("fixedAt")) if res else None, str(t["lecon"]) if t.get("lecon") else None))
+        errors = [e for e in (res.get("erreurs") or []) if isinstance(e, dict) and e.get("extrait") and e.get("correction")]
+        with conn.cursor() as cur:
+            cur.executemany(
+                "insert into writing_errors (user_id, writing_id, position, excerpt, correction, kind, explanation)"
+                " values (%s,%s,%s,%s,%s,%s,%s) on conflict do nothing",
+                [(user, _int(t["id"]), i, str(e["extrait"]), str(e["correction"]), str(e.get("type") or "autre"),
+                  str(e.get("explication") or "")) for i, e in enumerate(errors)])
+
+
+def rebuild_writings(conn, user=USER):
+    row = conn.execute("select value from user_store where user_id = %s and key = 'atelier:ecrits'", (user,)).fetchone()
+    _writing_rows(conn, user, row[0] if row and isinstance(row[0], list) else [])
 
 
 def _sentence_rows(conn, user, eid, p):
@@ -283,6 +329,16 @@ def rebuild_words(conn, user=USER):
             level = _int(box.get("b"))
             if level is not None and (w["box"] is None or level > w["box"]):
                 w["box"], w["due"] = level, _day(box.get("due")) if box.get("due") else None
+    for (value,) in conn.execute("select value from user_store where user_id = %s and key = 'atelier:cours-rev'", (user,)):
+        if not isinstance(value, dict):
+            continue
+        for k, state in value.items():                 # course words: "lex:<lexicon id>" -> {"known": bool}
+            lex = _int(k[len("lex:"):]) if str(k).startswith("lex:") else None
+            if lex is None or not isinstance(state, dict) or not state.get("known"):
+                continue
+            w = words.setdefault(lex, {"known": False, "known_in": set(), "box": None, "due": None})
+            w["known"] = True
+            w["known_in"].add("cours")
     conn.execute("delete from word_progress where user_id = %s", (user,))
     with conn.cursor() as cur:
         cur.executemany(
@@ -318,6 +374,113 @@ def import_store_file(conn, root, user=USER):
     return len(saved)
 
 
+COURS_VOCAB = ".vocab.json"                        # next to each lesson video: the words of that lesson
+
+
+COURS_ARTICLE = re.compile(r"^(?:(?:de\s+)?l['’]|(?:une?|les?|la|des|du)\s+)", re.IGNORECASE)
+
+
+def course_display(word):
+    """The form shown for a course word: its article kept, the bracket removed, the feminine first.
+    'un œil (les yeux)' -> 'un œil'; 'un voisin / une voisine' -> 'une voisine / un voisin'."""
+    text = re.sub(r"\s+", " ", re.sub(r"\(.*?\)", "", str(word))).strip() or str(word).strip()
+    parts = [p.strip() for p in re.split(r"\s*/\s*", text)]
+    if len(parts) != 2:
+        return text
+    def fem(p):
+        return bool(re.match(r"^(une|la)\s", p, re.I)) or bool(re.match(r"^l['’]", p, re.I) and p.lower().endswith("e"))
+    elided = all(re.match(r"^l['’]", p, re.I) for p in parts)
+    if fem(parts[1]) and not fem(parts[0]):
+        if elided and parts[0].lower().endswith("e") and parts[1].lower().endswith("e"):
+            return text
+        return parts[1] + " / " + parts[0]
+    return text
+
+
+def course_root(word):
+    """The root of a course word: 'un œil', 'un œil (les yeux)' and 'l'œil' are all 'œil', so one dictionary word."""
+    base = COURS_ARTICLE.sub("", re.sub(r"\(.*?\)", "", str(word)).strip()).strip()
+    return base or str(word).strip()
+
+
+def merge_course_variants(conn, user=USER):
+    """A word written with a bracket by the lessons, such as 'un œil (les yeux)', is the dictionary word 'œil'.
+    Its uses, its progress and its "known" marks move to 'œil'. The old dictionary row is left unused."""
+    moves = {}
+    for old, display, pos in conn.execute("select id, display, pos from lexicon where position('(' in display) > 0").fetchall():
+        target = lexicon_id(conn, course_root(display), pos, course_display(display))
+        if target != old:
+            moves[old] = target
+    return apply_merges(conn, moves, user)
+
+
+def apply_merges(conn, moves, user=USER):
+    """Move every use, progress and "known" mark from each word in moves (old id -> new id) to its new id."""
+    if not moves:
+        return 0
+    with conn.transaction():
+        for old, target in moves.items():
+            for table in ("vocab", "user_words", "cours_vocab"):
+                conn.execute(f"update {table} set lexicon_id = %s where lexicon_id = %s", (target, old))
+            conn.execute(
+                "insert into word_progress (user_id, lexicon_id, known, known_in, box, due)"
+                " select user_id, %s, known, known_in, box, due from word_progress where lexicon_id = %s"
+                " on conflict (user_id, lexicon_id) do update set known = word_progress.known or excluded.known,"
+                " known_in = array(select distinct unnest(word_progress.known_in || excluded.known_in)),"
+                " box = greatest(word_progress.box, excluded.box)", (target, old))
+            conn.execute("delete from word_progress where lexicon_id = %s", (old,))
+        for key, value in conn.execute(
+                "select key, value from user_store where user_id = %s and key = 'atelier:cours-rev'", (user,)).fetchall():
+            if not isinstance(value, dict):
+                continue
+            new = {}
+            for k, state in value.items():
+                lex = _int(str(k)[4:]) if str(k).startswith("lex:") else None
+                if lex in moves:
+                    k = "lex:%d" % moves[lex]
+                if k not in new or (isinstance(state, dict) and state.get("known")):
+                    new[k] = state
+            conn.execute("update user_store set value = %s where user_id = %s and key = 'atelier:cours-rev'",
+                         (Jsonb(new), user))
+        rebuild_words(conn, user)
+    return len(moves)
+
+
+def sync_cours_vocab(conn, root):
+    """Load the words of every course lesson into cours_vocab.
+
+    A lesson's words are the file <video name>.vocab.json, next to the video in cours/. Each lesson's rows are
+    replaced whole, so loading again after an edit does not duplicate words. Returns {lesson: number of words}."""
+    course = Path(root) / "cours"
+    counted = {}
+    for path in sorted(course.rglob("*" + COURS_VOCAB)):
+        lesson = str(path.relative_to(course))[: -len(COURS_VOCAB)]
+        unit = path.parent.name
+        number = re.match(r"\d+", path.name)
+        try:
+            items = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            print(f"  ignoré (JSON illisible) : {lesson} : {exc}")
+            continue
+        rows = []
+        for item in items if isinstance(items, list) else []:
+            if not isinstance(item, dict) or not str(item.get("word") or "").strip():
+                continue
+            word = str(item["word"]).strip()
+            pos = item.get("pos") or None
+            rows.append((lesson, len(rows), unit, int(number.group()) if number else None,
+                         lexicon_id(conn, course_root(word), pos, course_display(word)), word, str(item.get("form") or word).strip(), pos,
+                         item.get("definition") or None, item.get("example") or None, item.get("image") or None,
+                         item.get("clip") or None, str(item.get("pluriel") or "").strip() or None))
+        with conn.transaction():
+            conn.execute("delete from cours_vocab where lesson = %s", (lesson,))
+            with conn.cursor() as cur:
+                cur.executemany("insert into cours_vocab (lesson, idx, unit, lesson_no, lexicon_id, word, form, pos,"
+                                " definition, example, image, clip, plural) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)", rows)
+        counted[lesson] = len(rows)
+    return counted
+
+
 # ----------------------------------------------------------------------------- command line
 
 def main():
@@ -327,7 +490,7 @@ def main():
     except ImportError:
         pass
     command = sys.argv[1] if len(sys.argv) > 1 else ""
-    if command not in ("init", "sync", "status"):
+    if command not in ("init", "sync", "status", "cours-vocab"):
         raise SystemExit(__doc__)
     if not address():
         raise SystemExit("ATELIER_DB n'est pas défini. Ajoute-le dans .env (voir .env.example).")
@@ -346,8 +509,14 @@ def main():
             moved = import_store_file(conn, root)
             if moved:
                 print(f"  progression reprise de data/store.json : {moved} clés")
+        if command == "cours-vocab":
+            moved = merge_course_variants(conn)
+            if moved:
+                print(f"  {moved} mot(s) avec une parenthèse fusionné(s) avec leur mot racine")
+            for lesson, n_words in sync_cours_vocab(conn, root).items():
+                print(f"  {lesson} : {n_words} mots")
         if command in ("sync", "status"):
-            for table in ("episodes", "sentences", "sentence_words", "vocab", "lexicon", "user_store", "user_words",
+            for table in ("episodes", "sentences", "sentence_words", "vocab", "cours_vocab", "lexicon", "user_store", "user_words",
                           "sentence_progress", "word_progress", "activity_days"):
                 print(f"  {table:18} {conn.execute(f'select count(*) from {table}').fetchone()[0]}")
 

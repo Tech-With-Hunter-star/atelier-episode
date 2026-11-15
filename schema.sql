@@ -78,6 +78,26 @@ alter table vocab add column if not exists ctx_end_s numeric(9,2);
 alter table vocab add column if not exists ctx_text text;
 create index if not exists vocab_lexicon on vocab (lexicon_id);
 
+-- the words of the course lessons: one row per word and lesson. The words are shared with the episodes through
+-- lexicon, so a word met in a lesson and in an episode is one word. A lesson's rows are replaced whole on each load.
+create table if not exists cours_vocab (
+    lesson     text    not null,                   -- the lesson's path in cours/, without ".vocab.json"
+    idx        integer not null,                   -- position in the lesson's list, from 0
+    unit       text    not null,                   -- the course folder, "Unite 10"
+    lesson_no  integer,                            -- the number at the start of the file name
+    lexicon_id integer not null references lexicon(id),
+    word       text    not null,                   -- dictionary form
+    form       text    not null,                   -- as it appears in the lesson
+    pos        text,
+    definition text,
+    example    text,
+    primary key (lesson, idx)
+);
+create index if not exists cours_vocab_lexicon on cours_vocab (lexicon_id);
+alter table cours_vocab add column if not exists image text;   -- the picture, relative to cours/ (null: none)
+alter table cours_vocab add column if not exists clip text;
+alter table cours_vocab add column if not exists plural text;   -- the everyday plural, with its article (null: none)    -- the teacher's voice for the word, an mp3 relative to cours/ (null: none)
+
 -- ---------------------------------------------------------------- learner
 
 create table if not exists users (
@@ -141,6 +161,38 @@ create table if not exists activity_days (
     day     date    not null,
     primary key (user_id, day)
 );
+
+-- production écrite: one row per text she wrote, one row per mistake Claude found in it.
+-- Filled from user_store (key atelier:ecrits) every time the app saves, like the tables above.
+create table if not exists writings (
+    user_id      integer not null references users(id) on delete cascade,
+    id           bigint  not null,                 -- the number the app gave the text (the moment it was written)
+    written_at   timestamptz not null,
+    prompt       text    not null default '',      -- the homework question, if she typed it
+    body         text    not null,                 -- her text, as she wrote it
+    corrected    text,                             -- Claude's corrected text; null while not corrected yet
+    score        numeric(4,1),                     -- out of 20
+    level        text,
+    comment      text,
+    model        text,
+    corrected_at timestamptz,
+    primary key (user_id, id)
+);
+
+alter table writings add column if not exists lesson text;     -- the lesson the text was written for (its path in cours/), if any
+
+create table if not exists writing_errors (
+    user_id     integer not null,
+    writing_id  bigint  not null,
+    position    integer not null,                  -- order of the mistake in the text, from 0
+    excerpt     text    not null,                  -- what she wrote
+    correction  text    not null,
+    kind        text    not null,                  -- orthographe, accent, accord, conjugaison, article ou préposition, ...
+    explanation text    not null default '',
+    primary key (user_id, writing_id, position),
+    foreign key (user_id, writing_id) references writings(user_id, id) on delete cascade
+);
+create index if not exists writing_errors_kind on writing_errors (user_id, kind);
 
 -- one line per learner and episode: how far along
 create or replace view episode_progress as

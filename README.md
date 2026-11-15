@@ -2,8 +2,9 @@
 
 Learn French from one podcast episode at a time. Give it an audio file (and a transcript if you have one);
 it returns the episode cut into sentences with exact times, a word list at your level, pictures, and
-exercises: listening, vocabulary, dictation, recitation and spaced review, plus a dictionary of everything said
-in your episodes and a calendar of practice days.
+exercises: listening, vocabulary, dictation, recitation and spaced review, plus free practice (word list,
+hands-free listening, record and compare), statistics (study time, what you remember after how many days) and a
+course page: your written texts corrected by Claude and kept, the lessons you followed, the resources to watch.
 
 Everything runs on your own computer and is used from a phone on the same Wi-Fi.
 

@@ -5,6 +5,8 @@ __pycache__/
 # podcasts belong to their authors and stay out of the repository: audio, transcripts, episode.json, images
 episodes/
 exemples/
+# the course you bought stays on your computer: videos, sheets, homework
+cours/
 # your progress and settings
 data/
 _backup/

@@ -27,6 +27,7 @@ import threading
 import time
 import unicodedata
 from pathlib import Path
+from urllib.parse import quote
 
 try:
     from dotenv import load_dotenv
@@ -51,6 +52,7 @@ SAFE_VOICE = re.compile(r"^\d{1,4}-[wg]\.(m4a|wav|mp3)$")
 VOICE_TYPES = (".m4a", ".wav", ".mp3")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from import_liens import title_key                                      # noqa: E402
 from import_episode import norm, word_clip, word_excerpt                # noqa: E402  (light: Whisper and Claude are only loaded when used)
 
 DB = None                                            # the db module when PostgreSQL is in use, otherwise None
@@ -405,6 +407,220 @@ def put_store(key: str, value=Body(...)):
         store[key] = value
         save_store(store)
     return {"ok": True}
+
+
+# ----------------------------------------------------------------------------- the course followed
+# Everything in the folder cours/ beside this file: one folder per course, and inside it either one folder per
+# lesson, or the files of all lessons side by side (then files that start with the same number belong together).
+COURS = ROOT / "cours"
+KINDS = {"video": {".mp4", ".m4v", ".mov", ".mkv", ".webm"}, "pdf": {".pdf"}, "audio": {".mp3", ".m4a", ".wav", ".ogg"},
+         "image": {".png", ".jpg", ".jpeg", ".webp"}, "doc": {".docx", ".pptx", ".txt", ".md", ".xlsx"}}
+CORRECTION = re.compile(r"corr(ig|ect)", re.IGNORECASE)
+DEVOIR = re.compile(r"devoir|exerc|homework|corr(ig|ect)|production\s*[ée]crite", re.IGNORECASE)
+RESSOURCE = re.compile(r"ress?ource|bonus|annexe", re.IGNORECASE)
+
+
+def natural(name):
+    """Sort key that puts "2" before "10"."""
+    return [int(p) if p.isdigit() else p.lower() for p in re.split(r"(\d+)", str(name))]
+
+
+def course_file(path):
+    """What the app needs to know about one file of a lesson, or None for a file it cannot use."""
+    kind = next((k for k, exts in KINDS.items() if path.suffix.lower() in exts), None)
+    if not kind or path.name.startswith("."):
+        return None
+    rel = path.relative_to(COURS).as_posix()
+    where = nfc(path.parent.name + "/" + path.stem)               # a file's name, or the folder it sits in, says what it is
+    return {"nom": nfc(path.name), "type": kind, "correction": bool(CORRECTION.search(nfc(path.stem))),
+            "partie": "devoir" if DEVOIR.search(where) else "ressource" if RESSOURCE.search(where) else "lecon",
+            "taille": path.stat().st_size, "url": "/cours-media/" + "/".join(quote(part) for part in rel.split("/"))}
+
+
+def clean_title(name):
+    name = nfc(name)
+    return re.sub(r"\s+", " ", re.sub(r"[_]+", " ", Path(name).stem if "." in name else name)).strip()
+
+
+def folders_of(folder):
+    """Sub-folders in natural order; extras (Sources, Ressources, Bonus) come after the units."""
+    return sorted((d for d in folder.iterdir() if d.is_dir() and not d.name.startswith(".")),
+                  key=lambda d: (bool(re.search(r"^sources?$|ress?ource|bonus|annexe", nfc(d.name), re.IGNORECASE)), natural(d.name)))
+
+
+def place(trail):
+    """Where a lesson sits: its unit, then the chapter(s) under it."""
+    return {"groupe": trail[0] if trail else "", "chapitre": " · ".join(trail[1:])}
+
+
+CHAPTER = re.compile(r"(?:chap(?:itre|\.)?|lesson|le[çc]on)\s*(?:\d+\.)?(\d+)|unit[ée]\s*\d+\.(\d+)", re.IGNORECASE)
+NUMBER = re.compile(r"\s*(\d+)\s*[-–._]")                          # "02 - ..." or "02_...": the place of a file in its folder
+
+
+def number_shared(folder, number):
+    """True when another file of the folder starts with the same number (then the number, not the order, says where it goes)."""
+    if not number:
+        return False
+    return sum(1 for y in folder.iterdir() if y.is_file() and (NUMBER.match(y.name) or [None, None])[1] == number.group(1)) > 1
+
+
+def nfc(text):
+    """macOS writes é as e + accent; put it back in one piece so that names can be read."""
+    return unicodedata.normalize("NFC", str(text))
+
+
+def chapter_of(name):
+    found = CHAPTER.search(nfc(name))
+    return (found.group(1) or found.group(2)) if found else None
+
+
+def lesson_title(name):
+    """"02 - French for Beginners _ Unité 10, Chap. 1 _ Les Études.webm" -> "Chapitre 1 · Les Études"."""
+    text = NUMBER.sub("", nfc(Path(name).stem), count=1) if NUMBER.match(nfc(name)) else nfc(Path(name).stem)
+    unit = re.search(r"unit[ée]\s*\d+(?:\.\d+)?[\s,_\-–]*", text, re.IGNORECASE)
+    if unit and text[unit.end():].strip():
+        text = text[unit.end():]
+    chapter = re.search(r"(chap(?:itre|\.)?|lesson|le[çc]on)\s*(?:\d+\.)?(\d+)", text, re.IGNORECASE)
+    if chapter:
+        word = "Chapitre" if chapter.group(1).lower().startswith("chap") else "Leçon"
+        text = f"{word} {chapter.group(2)} · " + re.sub(r"^[\s_,\-–:]+", "", text[chapter.end():])
+    return re.sub(r"\s+", " ", text.replace("_", " ")).strip(" ·")
+
+
+def loose_lessons(folder, trail):
+    """Files lying side by side in a folder. A chapter's video and its homework ("Chap. 1 _ Devoirs") make one lesson;
+    homework that names no chapter goes with the lesson just before it; otherwise the leading number says which lesson
+    a file belongs to. Lessons keep the order of the numbers."""
+    groups, last = {}, None
+    for x in sorted(folder.iterdir(), key=lambda x: natural(x.name)):
+        if x.is_file() and course_file(x):
+            chapter, number = chapter_of(x.stem), NUMBER.match(x.name)
+            if chapter:
+                key = "c" + chapter
+            elif DEVOIR.search(nfc(x.stem)) and last and x.suffix.lower() in KINDS["video"] and not number_shared(folder, number):
+                key = last
+            else:
+                key = number.group(1).lstrip("0") or "0" if number else x.stem
+            groups.setdefault(key, []).append(x)
+            last = key
+    found = []
+    for key, items in groups.items():
+        main = next((x for x in items if x.suffix.lower() in KINDS["video"] and not DEVOIR.search(nfc(x.stem))), items[0])
+        found.append({"id": f"{folder.relative_to(COURS).as_posix()}/#{key}", "titre": lesson_title(main.name), **place(trail),
+                      "fichiers": [course_file(x) for x in items]})
+    return found
+
+
+def lessons_in(folder, trail):
+    """Walk level > unit > chapter > lesson (any depth): the last folder, the one that holds the files, is the lesson.
+    Folders named devoirs, exercices, corrections or ressources are parts of a lesson, not lessons."""
+    subs = [d for d in folders_of(folder) if not (DEVOIR.search(d.name) or RESSOURCE.search(d.name))]
+    numbered = {m.group(1) for m in (NUMBER.match(x.name) for x in folder.iterdir()
+                                     if x.is_file() and x.suffix.lower() in KINDS["video"]) if m}
+    videos = [x for x in folder.iterdir() if x.is_file() and x.suffix.lower() in KINDS["video"] and not DEVOIR.search(nfc(x.stem))]
+    if not subs and trail and len(numbered) < 2 and len(videos) < 3:   # several videos side by side are several lessons
+        files = [f for f in (course_file(x) for x in sorted(folder.rglob("*"), key=lambda x: natural(x.name)) if x.is_file()) if f]
+        return [{"id": folder.relative_to(COURS).as_posix(), "titre": clean_title(folder.name), **place(trail[:-1]),
+                 "fichiers": files}] if files else []
+    found = []
+    for sub in subs:
+        found += lessons_in(sub, trail + [clean_title(sub.name)])
+    return found + loose_lessons(folder, trail)
+
+
+def add_links(folder, lessons):
+    """Put the teacher's links (liens.json, written by import_liens.py) into the lesson whose video has the same title."""
+    try:
+        videos = json.loads((folder / "liens.json").read_text(encoding="utf-8")).get("videos", [])
+    except (OSError, ValueError, AttributeError):
+        videos = []
+    by_title = {v.get("cle"): v for v in videos if isinstance(v, dict) and v.get("cle")}
+    for lesson in lessons:
+        links = []
+        for f in lesson["fichiers"]:
+            video = by_title.get(title_key(f["nom"])) if f["type"] == "video" else None
+            if video:
+                f["youtube"] = "https://www.youtube.com/watch?v=" + str(video.get("id"))      # the same video, when the computer is closed
+                links += [x for x in video.get("liens", []) if isinstance(x, dict) and str(x.get("lien", "")).startswith("http")
+                          and x["lien"] not in [y["lien"] for y in links]]
+        lesson["liens"] = [{"titre": str(x.get("titre") or ""), "lien": x["lien"]} for x in links]
+    try:                                                          # sujets.json: {name of a writing sheet: what it asks}
+        prompts = json.loads((folder / "sujets.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        prompts = {}
+    try:                                                          # sons.json (prepare_sons.py): the moments of each example word
+        sounds = json.loads((folder / "sons.json").read_text(encoding="utf-8")).get("videos", {})
+    except (OSError, ValueError, AttributeError):
+        sounds = {}
+    if isinstance(sounds, dict):
+        sounds = {nfc(k): v for k, v in sounds.items() if isinstance(v, dict)}
+        for lesson in lessons:
+            for f in lesson["fichiers"]:
+                if f["nom"] in sounds and sounds[f["nom"]].get("sons"):
+                    f["resume"], f["sons"] = str(sounds[f["nom"]].get("resume") or ""), sounds[f["nom"]]["sons"]
+    if isinstance(prompts, dict):
+        prompts = {nfc(k): str(v) for k, v in prompts.items()}
+        for lesson in lessons:
+            for f in lesson["fichiers"]:
+                if f["nom"] in prompts:
+                    f["consigne"] = prompts[f["nom"]]
+
+
+@app.get("/api/cours")
+def list_courses():
+    """The levels found in cours/, each with its lessons (and the unit each belongs to) in natural order."""
+    courses = []
+    if not COURS.is_dir():
+        return courses
+    for folder in folders_of(COURS):
+        lessons = lessons_in(folder, [])
+        add_links(folder, lessons)
+        if lessons:
+            courses.append({"id": folder.name, "titre": clean_title(folder.name), "lecons": lessons})
+    return courses
+
+
+@app.get("/api/cours-mots")
+def course_words():
+    """The words of every course lesson, by unit and lesson (from the table cours_vocab, see db.py cours-vocab)."""
+    if not DB:
+        return {"unites": []}
+    with DB.connect() as conn:
+        rows = conn.execute("select unit, lesson, lesson_no, word, form, pos, definition, example, image, clip, lexicon_id, plural from cours_vocab"
+                            " order by unit, lesson, idx").fetchall()
+        known = {r[0] for r in conn.execute("select lexicon_id from word_progress where user_id = %s and known", (DB.USER,)).fetchall()}
+    unites = {}
+    for unit, lesson, numero, word, form, pos, definition, example, image, clip, lex, plural in rows:
+        lecons = unites.setdefault(unit, {})
+        lecon = lecons.setdefault(lesson, {"lesson": lesson, "numero": numero, "titre": clean_title(Path(lesson).name), "mots": []})
+        lecon["mots"].append({"word": word, "form": form, "pos": pos, "definition": definition, "example": example,
+                              "image": "cours-media/" + quote(image) if image else None,
+                              "clip": "cours-media/" + quote(clip) if clip else None, "lex": lex, "known_db": lex in known,
+                              "plural": plural})
+    def order(unit):
+        found = re.search(r"\d+", unit)
+        return (int(found.group()) if found else 999, unit)
+    return {"unites": [{"unit": unit, "lecons": list(unites[unit].values())} for unit in sorted(unites, key=order)]}
+
+
+@app.get("/cours-media/{path:path}")
+def course_media(path: str):
+    target = (COURS / path).resolve()
+    if COURS.resolve() not in target.parents or not target.is_file() or not course_file(target):
+        raise HTTPException(404, "Fichier introuvable")
+    return FileResponse(target, media_type=mimetypes.guess_type(target.name)[0] or "application/octet-stream")
+
+
+@app.post("/api/corriger")
+def corriger_texte(body: dict = Body(...)):
+    """Claude corrects a text the learner wrote. The app keeps the text and the correction itself (in the store),
+    so they follow the same road as the rest of the progress, offline included."""
+    import corriger
+    try:
+        return corriger.correct(str(body.get("consigne") or ""), str(body.get("texte") or ""),
+                                level=str(body.get("niveau") or "A1")[:4], lang=str(body.get("langue") or "en")[:2])
+    except corriger.CorrectionError as e:
+        raise HTTPException(502, str(e))
 
 
 # ----------------------------------------------------------------------------- the app itself
